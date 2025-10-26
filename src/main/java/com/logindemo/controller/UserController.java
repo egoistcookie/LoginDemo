@@ -4,8 +4,8 @@ import com.logindemo.model.User;
 import com.logindemo.model.dto.ApiResponse;
 import com.logindemo.model.dto.AuthResponse;
 import com.logindemo.service.UserService;
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import io.swagger.v3.oas.annotations.Operation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -18,7 +18,7 @@ import org.springframework.web.bind.annotation.RestController;
  */
 @RestController
 @RequestMapping("/users")
-@Api(tags = "用户相关接口")
+@Tag(name = "用户相关接口")
 public class UserController {
 
     @Autowired
@@ -28,7 +28,7 @@ public class UserController {
      * 获取当前登录用户信息
      */
     @GetMapping("/me")
-    @ApiOperation("获取当前登录用户信息")
+    @Operation(summary = "获取当前登录用户信息")
     public ApiResponse<AuthResponse.UserInfo> getCurrentUser() {
         // 从安全上下文中获取当前认证用户
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
