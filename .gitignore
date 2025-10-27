@@ -1,0 +1,15 @@
+运行日志.txt
+login-service.iml
+.idea/encodings.xml
+.idea/jarRepositories.xml
+.idea/misc.xml
+.idea/modules.xml
+.idea/vcs.xml
+.vscode/settings.json
+logs/application.log
+src/main/java/com/logindemo/config/RedisConfig.java
+target/*
+.idea/compiler.xml
+frontend/node_modules/*
+logs/application.log.2025-10-26.0.gz
+.idea/dataSources.xml
