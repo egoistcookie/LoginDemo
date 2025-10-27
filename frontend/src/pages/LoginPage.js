@@ -47,7 +47,6 @@ const LoginPage = ({ setIsAuthenticated }) => {
         <Title level={2} className="login-form-title">用户登录</Title>
         <Form
           name="normal_login"
-          className="login-form"
           initialValues={{ remember: true }}
           onFinish={onFinish}
         >
