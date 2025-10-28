@@ -18,6 +18,12 @@ spring:
     database: 0
     timeout: 10000ms
     password: 
+    lettuce:
+      pool:
+        enabled: false
+    connect-timeout: 5000
+    # 禁用Redis健康检查
+    # 允许Redis连接失败时应用仍能启动
 
   # 安全配置
   security:
