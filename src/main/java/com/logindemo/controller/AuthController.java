@@ -7,6 +7,8 @@ import com.logindemo.model.dto.RegisterRequest;
 import com.logindemo.service.UserService;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import io.swagger.v3.oas.annotations.Operation;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import javax.validation.Valid;
@@ -19,6 +21,8 @@ import javax.validation.Valid;
 @Tag(name = "认证相关接口")
 public class AuthController {
 
+    private static final Logger logger = LoggerFactory.getLogger(AuthController.class);
+
     @Autowired
     private UserService userService;
 
@@ -28,8 +32,15 @@ public class AuthController {
     @PostMapping("/register")
     @Operation(summary = "用户注册")
     public ApiResponse<AuthResponse> register(@Valid @RequestBody RegisterRequest request) {
-        AuthResponse response = userService.register(request);
-        return ApiResponse.success(response);
+        logger.info("收到注册请求，用户名: {}, 邮箱: {}", request.getUsername(), request.getEmail());
+        try {
+            AuthResponse response = userService.register(request);
+            logger.info("注册成功，用户名: {}", request.getUsername());
+            return ApiResponse.success(response);
+        } catch (Exception e) {
+            logger.error("注册失败，用户名: {}, 错误信息: {}", request.getUsername(), e.getMessage(), e);
+            throw e;
+        }
     }
 
     /**

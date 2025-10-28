@@ -14,7 +14,27 @@ const RegisterPage = () => {
   const onFinish = async (values) => {
     setLoading(true);
     try {
-      const response = await axios.post('/auth/register', values);
+      // 只传递后端需要的字段，不包含confirmPassword
+      const registerData = {
+        username: values.username,
+        password: values.password,
+        email: values.email,
+        phone: values.phone
+      };
+      
+      // 日志记录：显示准备发送的数据
+      console.log('注册请求数据:', registerData);
+      
+      // 日志记录：显示请求URL和配置
+      console.log('注册请求URL:', '/auth/register');
+      
+      const response = await axios.post('/auth/register', registerData);
+      
+      // 日志记录：显示完整响应
+      console.log('注册响应完整数据:', response);
+      console.log('注册响应状态码:', response.status);
+      console.log('注册响应数据:', response.data);
+      
       if (response.data.code === 200) {
         // 保存Token到本地存储
         localStorage.setItem('accessToken', response.data.data.accessToken);
@@ -26,13 +46,22 @@ const RegisterPage = () => {
         // 跳转到主页
         navigate('/');
       } else {
+        console.error('注册失败，后端返回非200状态:', response.data);
         message.error(response.data.message || '注册失败');
       }
     } catch (error) {
+      // 详细的错误日志记录
+      console.error('注册请求异常:', error);
       if (error.response) {
+        console.error('响应错误状态:', error.response.status);
+        console.error('响应错误数据:', error.response.data);
         message.error(error.response.data.message || '注册失败');
-      } else {
+      } else if (error.request) {
+        console.error('请求已发送但未收到响应:', error.request);
         message.error('网络错误，请稍后重试');
+      } else {
+        console.error('请求配置错误:', error.message);
+        message.error('请求配置错误，请稍后重试');
       }
     } finally {
       setLoading(false);

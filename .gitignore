@@ -13,3 +13,4 @@ target/*
 frontend/node_modules/*
 logs/application.log.2025-10-26.0.gz
 .idea/dataSources.xml
+logs/application.log.2025-10-27.0.gz

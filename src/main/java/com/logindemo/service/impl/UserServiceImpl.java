@@ -11,6 +11,8 @@ import com.logindemo.service.UserService;
 import com.logindemo.utils.JwtUtils;
 import com.logindemo.utils.PasswordUtils;
 import com.logindemo.utils.RedisUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -23,6 +25,8 @@ import java.util.Objects;
  */
 @Service
 public class UserServiceImpl implements UserService {
+
+    private static final Logger logger = LoggerFactory.getLogger(UserServiceImpl.class);
 
     @Autowired
     private UserMapper userMapper;
@@ -60,53 +64,77 @@ public class UserServiceImpl implements UserService {
     @Override
     @Transactional
     public AuthResponse register(RegisterRequest request) {
-        // 检查用户名是否已存在
-        if (Objects.nonNull(userMapper.findByUsername(request.getUsername()))) {
-            throw new BusinessException("用户名已存在");
+        logger.info("开始用户注册流程，用户名: {}, 邮箱: {}, 手机号: {}", 
+                request.getUsername(), request.getEmail(), request.getPhone());
+        
+        try {
+            // 检查用户名是否已存在
+            logger.debug("检查用户名是否已存在: {}", request.getUsername());
+            if (Objects.nonNull(userMapper.findByUsername(request.getUsername()))) {
+                logger.warn("用户名已存在: {}", request.getUsername());
+                throw new BusinessException("用户名已存在");
+            }
+
+            // 检查邮箱是否已存在
+            logger.debug("检查邮箱是否已存在: {}", request.getEmail());
+            if (Objects.nonNull(userMapper.findByEmail(request.getEmail()))) {
+                logger.warn("邮箱已被注册: {}", request.getEmail());
+                throw new BusinessException("邮箱已被注册");
+            }
+
+            // 检查手机号是否已存在
+            logger.debug("检查手机号是否已存在: {}", request.getPhone());
+            if (Objects.nonNull(request.getPhone()) && !request.getPhone().isEmpty() 
+                    && Objects.nonNull(userMapper.findByPhone(request.getPhone()))) {
+                logger.warn("手机号已被注册: {}", request.getPhone());
+                throw new BusinessException("手机号已被注册");
+            }
+
+            // 创建用户
+            logger.debug("开始创建用户对象");
+            User user = new User();
+            user.setUsername(request.getUsername());
+            logger.debug("密码加密中...");
+            user.setPassword(passwordUtils.encode(request.getPassword()));
+            user.setEmail(request.getEmail());
+            user.setPhone(request.getPhone());
+            user.setStatus(1); // 启用状态
+            user.setCreatedAt(LocalDateTime.now());
+            user.setUpdatedAt(LocalDateTime.now());
+
+            // 保存用户
+            logger.debug("保存用户到数据库");
+            userMapper.insert(user);
+            logger.info("用户保存成功，ID: {}", user.getId());
+
+            // 生成Token
+            logger.debug("为用户生成Token");
+            String accessToken = jwtUtils.generateAccessToken(user.getId(), user.getUsername());
+            String refreshToken = jwtUtils.generateRefreshToken(user.getId(), user.getUsername());
+
+            // 构建响应
+            logger.debug("构建认证响应");
+            AuthResponse response = new AuthResponse();
+            response.setAccessToken(accessToken);
+            response.setRefreshToken(refreshToken);
+            response.setExpiresIn(jwtUtils.getExpirationTime());
+
+            AuthResponse.UserInfo userInfo = new AuthResponse.UserInfo();
+            userInfo.setId(user.getId());
+            userInfo.setUsername(user.getUsername());
+            userInfo.setEmail(user.getEmail());
+            userInfo.setPhone(user.getPhone());
+            response.setUser(userInfo);
+
+            logger.info("用户注册流程完成，ID: {}", user.getId());
+            return response;
+        } catch (BusinessException e) {
+            logger.error("注册业务异常: {}", e.getMessage());
+            throw e;
+        } catch (Exception e) {
+            logger.error("注册过程中发生系统异常", e);
+            throw new BusinessException("注册失败，请稍后重试");
         }
-
-        // 检查邮箱是否已存在
-        if (Objects.nonNull(userMapper.findByEmail(request.getEmail()))) {
-            throw new BusinessException("邮箱已被注册");
-        }
-
-        // 检查手机号是否已存在
-        if (Objects.nonNull(request.getPhone()) && !request.getPhone().isEmpty() 
-                && Objects.nonNull(userMapper.findByPhone(request.getPhone()))) {
-            throw new BusinessException("手机号已被注册");
-        }
-
-        // 创建用户
-        User user = new User();
-        user.setUsername(request.getUsername());
-        user.setPassword(passwordUtils.encode(request.getPassword()));
-        user.setEmail(request.getEmail());
-        user.setPhone(request.getPhone());
-        user.setStatus(1); // 启用状态
-        user.setCreatedAt(LocalDateTime.now());
-        user.setUpdatedAt(LocalDateTime.now());
-
-        // 保存用户
-        userMapper.insert(user);
-
-        // 生成Token
-        String accessToken = jwtUtils.generateAccessToken(user.getId(), user.getUsername());
-        String refreshToken = jwtUtils.generateRefreshToken(user.getId(), user.getUsername());
-
-        // 构建响应
-        AuthResponse response = new AuthResponse();
-        response.setAccessToken(accessToken);
-        response.setRefreshToken(refreshToken);
-        response.setExpiresIn(jwtUtils.getExpirationTime());
-
-        AuthResponse.UserInfo userInfo = new AuthResponse.UserInfo();
-        userInfo.setId(user.getId());
-        userInfo.setUsername(user.getUsername());
-        userInfo.setEmail(user.getEmail());
-        userInfo.setPhone(user.getPhone());
-        response.setUser(userInfo);
-
-        return response;
     }
 
     @Override
