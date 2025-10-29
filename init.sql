@@ -30,8 +30,8 @@ CREATE INDEX idx_user_phone ON users(phone);
 
 -- 插入初始角色数据
 INSERT INTO roles (name, description, created_at) VALUES 
-('ADMIN', '管理员', NOW()),
-('USER', '普通用户', NOW());
+('ADMIN', 'admin', NOW()),
+('USER', 'user', NOW());
 
 -- 插入测试用户数据（密码为123456）
 INSERT INTO users (username, password, email, phone, status, created_at, updated_at) VALUES 

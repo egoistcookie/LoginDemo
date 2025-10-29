@@ -6,9 +6,9 @@ server:
 spring:
   # 数据库配置
   datasource:
-    url: jdbc:mysql://localhost:3306/login_demo?useUnicode=true&characterEncoding=utf-8&useSSL=false&serverTimezone=Asia/Shanghai
+    url: jdbc:mysql://localhost:3306/login_demo?useUnicode=true&characterEncoding=utf-8&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Shanghai
     username: root
-    password: 123456
+    password: qq7816288
     driver-class-name: com.mysql.cj.jdbc.Driver
 
   # Redis配置
@@ -42,7 +42,7 @@ mybatis-plus:
 
 # JWT配置
 jwt:
-  secret: your-secret-key-change-in-production
+  secret: loginDemoJwtSecretKeyForDevelopmentEnvironment2024SecureLongEnoughKey123456789
   expiration: 3600000  # 1小时，单位毫秒
   refresh-expiration: 86400000  # 24小时，单位毫秒
 
@@ -58,3 +58,6 @@ logging:
     com.logindemo: DEBUG
   file:
     name: logs/application.log
+  charset:
+    console: UTF-8
+    file: UTF-8
