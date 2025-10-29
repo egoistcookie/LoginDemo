@@ -1,6 +1,9 @@
 package com.logindemo.exception;
 
 import com.logindemo.model.dto.ApiResponse;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.data.redis.RedisConnectionFailureException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
@@ -18,6 +21,8 @@ import java.util.stream.Collectors;
  */
 @ControllerAdvice
 public class GlobalExceptionHandler {
+
+    private static final Logger logger = LoggerFactory.getLogger(GlobalExceptionHandler.class);
 
     /**
      * 处理业务异常
@@ -54,13 +59,25 @@ public class GlobalExceptionHandler {
     }
 
     /**
+     * 处理Redis连接异常
+     */
+    @ExceptionHandler(RedisConnectionFailureException.class)
+    @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
+    public ResponseEntity<ApiResponse<?>> handleRedisConnectionFailure(RedisConnectionFailureException ex) {
+        // 使用日志框架记录异常
+        logger.error("Redis连接失败: {}", ex.getMessage(), ex);
+        // 对于Redis连接失败，我们可以返回一个友好的错误消息，但仍允许应用继续运行
+        return new ResponseEntity<>(ApiResponse.error(500, "缓存服务暂时不可用，请稍后重试"), HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+
+    /**
      * 处理其他异常
      */
     @ExceptionHandler(Exception.class)
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     public ResponseEntity<ApiResponse<?>> handleException(Exception ex) {
-        // 记录异常日志
-        ex.printStackTrace();
+        // 使用日志框架记录异常，而不是printStackTrace()
+        logger.error("系统异常: {}", ex.getMessage(), ex);
         return new ResponseEntity<>(ApiResponse.error(500, "服务器内部错误"), HttpStatus.INTERNAL_SERVER_ERROR);
     }
 }

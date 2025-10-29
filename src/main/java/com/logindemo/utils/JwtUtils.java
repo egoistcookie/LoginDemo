@@ -3,11 +3,14 @@ package com.logindemo.utils;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
+import io.jsonwebtoken.security.Keys;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
+import javax.crypto.SecretKey;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Base64;
 
 /**
  * JWT工具类
@@ -24,6 +27,23 @@ public class JwtUtils {
     @Value("${jwt.refresh-expiration}")
     private long refreshExpiration;
 
+    // 懒加载方式创建SecretKey
+    private SecretKey cachedKey;
+
+    private SecretKey getSecretKey() {
+        if (cachedKey == null) {
+            // 如果密钥长度不足，可以通过Base64编码或者使用Keys.secretKeyFor方法生成
+            if (secret.length() < 64) {
+                // 使用Keys.secretKeyFor方法生成符合算法要求的密钥
+                cachedKey = Keys.secretKeyFor(SignatureAlgorithm.HS512);
+            } else {
+                // 如果密钥已经足够长，直接使用
+                cachedKey = Keys.hmacShaKeyFor(secret.getBytes());
+            }
+        }
+        return cachedKey;
+    }
+
     /**
      * 生成访问Token
      */
@@ -37,7 +57,7 @@ public class JwtUtils {
                 .setClaims(claims)
                 .setIssuedAt(new Date())
                 .setExpiration(new Date(System.currentTimeMillis() + expiration))
-                .signWith(SignatureAlgorithm.HS512, secret)
+                .signWith(getSecretKey(), SignatureAlgorithm.HS512)
                 .compact();
     }
 
@@ -54,7 +74,7 @@ public class JwtUtils {
                 .setClaims(claims)
                 .setIssuedAt(new Date())
                 .setExpiration(new Date(System.currentTimeMillis() + refreshExpiration))
-                .signWith(SignatureAlgorithm.HS512, secret)
+                .signWith(getSecretKey(), SignatureAlgorithm.HS512)
                 .compact();
     }
 
@@ -91,7 +111,7 @@ public class JwtUtils {
      */
     private Claims getClaimsFromToken(String token) {
         return Jwts.parser()
-                .setSigningKey(secret)
+                .setSigningKey(getSecretKey())
                 .parseClaimsJws(token)
                 .getBody();
     }

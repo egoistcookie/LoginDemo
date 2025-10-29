@@ -2,6 +2,10 @@ server:
   port: 8080
   servlet:
     context-path: /api
+    encoding:
+      charset: UTF-8
+      enabled: true
+      force: true
 
 spring:
   # 数据库配置
@@ -22,8 +26,6 @@ spring:
       pool:
         enabled: false
     connect-timeout: 5000
-    # 禁用Redis健康检查
-    # 允许Redis连接失败时应用仍能启动
 
   # 安全配置
   security:
@@ -42,14 +44,14 @@ mybatis-plus:
 
 # JWT配置
 jwt:
-  secret: loginDemoJwtSecretKeyForDevelopmentEnvironment2024SecureLongEnoughKey123456789
-  expiration: 3600000  # 1小时，单位毫秒
-  refresh-expiration: 86400000  # 24小时，单位毫秒
+  secret: your-secret-key-change-in-production-must-be-at-least-64-chars-long-for-hs512-algorithm-security
+  expiration: 3600000
+  refresh-expiration: 86400000
 
 # 登录失败限制配置
 login:
   max-attempts: 5
-  lock-duration: 300  # 5分钟，单位秒
+  lock-duration: 300
 
 # 日志配置
 logging:
@@ -61,3 +63,7 @@ logging:
   charset:
     console: UTF-8
     file: UTF-8
+  pattern:
+    console: '%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n'
+    file: '%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n'
+  config: classpath:logback-spring.xml
