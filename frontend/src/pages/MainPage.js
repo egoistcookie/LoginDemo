@@ -74,17 +74,86 @@ const MainPage = ({ setIsAuthenticated }) => {
         </div>
       </Header>
       <Content className="content">
-        <Title level={2}>
-          <UserOutlined /> 欢迎回来，{userInfo?.username || '用户'}
-        </Title>
-        {userInfo && (
-          <div>
-            <Paragraph>ID: {userInfo.id}</Paragraph>
-            <Paragraph>邮箱: {userInfo.email}</Paragraph>
-            <Paragraph>手机号: {userInfo.phone || '未设置'}</Paragraph>
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '30px' }}>
+          <Title level={2}>
+            <UserOutlined /> 欢迎回来，{userInfo?.username || '用户'}
+          </Title>
+          
+          {/* 旋转地球效果 */}
+          <div className="earth-container">
+            <div className="earth"></div>
           </div>
-        )}
+          
+          {userInfo && (
+            <div>
+              <Paragraph>ID: {userInfo.id}</Paragraph>
+              <Paragraph>邮箱: {userInfo.email}</Paragraph>
+              <Paragraph>手机号: {userInfo.phone || '未设置'}</Paragraph>
+            </div>
+          )}
+        </div>
       </Content>
+      
+      <style jsx>{`
+        .main-container {
+          min-height: 100vh;
+        }
+        
+        .header {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          padding: 0 24px;
+        }
+        
+        .content {
+          padding: 40px;
+          background-color: #f0f2f5;
+          min-height: calc(100vh - 64px);
+        }
+        
+        .earth-container {
+          width: 200px;
+          height: 200px;
+          perspective: 1000px;
+        }
+        
+        .earth {
+          width: 100%;
+          height: 100%;
+          border-radius: 50%;
+          background-image: 
+            radial-gradient(circle at 50% 50%, #0077b6, #023e8a 70%),
+            repeating-linear-gradient(45deg, rgba(255,255,255,0.1) 0px, rgba(255,255,255,0.1) 1px, transparent 1px, transparent 10px),
+            repeating-linear-gradient(-45deg, rgba(255,255,255,0.1) 0px, rgba(255,255,255,0.1) 1px, transparent 1px, transparent 10px);
+          background-size: cover, 100% 100%, 100% 100%;
+          background-position: center;
+          box-shadow: 0 0 30px rgba(0, 123, 255, 0.5);
+          animation: rotate 20s linear infinite;
+          position: relative;
+          overflow: hidden;
+        }
+        
+        .earth::before {
+          content: '';
+          position: absolute;
+          top: 0;
+          left: 0;
+          right: 0;
+          bottom: 0;
+          background: linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0) 50%);
+          pointer-events: none;
+        }
+        
+        @keyframes rotate {
+          0% {
+            transform: rotateY(0deg);
+          }
+          100% {
+            transform: rotateY(360deg);
+          }
+        }
+      `}</style>
     </Layout>
   );
 };
