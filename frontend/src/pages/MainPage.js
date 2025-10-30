@@ -1,14 +1,70 @@
 import React, { useState, useEffect } from 'react';
-import { Layout, Typography, Button, message } from 'antd';
-import { LogoutOutlined, UserOutlined } from '@ant-design/icons';
+import { Layout, Typography, Button, message, Menu } from 'antd';
+import { LogoutOutlined, UserOutlined, HomeOutlined, UserAddOutlined, UnorderedListOutlined, AppstoreOutlined, SettingOutlined } from '@ant-design/icons';
 import axios from 'axios';
 
-const { Header, Content } = Layout;
+const { Header, Content, Sider } = Layout;
 const { Title, Paragraph } = Typography;
+const { SubMenu } = Menu;
 
 const MainPage = ({ setIsAuthenticated }) => {
   const [userInfo, setUserInfo] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [collapsed, setCollapsed] = useState(false);
+
+  // 菜单项数据
+  const menuItems = [
+    {
+      key: 'home',
+      title: '首页',
+      icon: <HomeOutlined />,
+      children: [
+        { key: 'home-dashboard', title: '数据看板' },
+        { key: 'home-stats', title: '统计报表' },
+        { key: 'home-overview', title: '概览信息' }
+      ]
+    },
+    {
+      key: 'users',
+      title: '人员管理',
+      icon: <UserAddOutlined />,
+      children: [
+        { key: 'users-list', title: '用户列表' },
+        { key: 'users-add', title: '添加用户' },
+        { key: 'users-import', title: '导入用户' }
+      ]
+    },
+    {
+      key: 'roles',
+      title: '角色管理',
+      icon: <UserOutlined />,
+      children: [
+        { key: 'roles-list', title: '角色列表' },
+        { key: 'roles-add', title: '创建角色' },
+        { key: 'roles-permissions', title: '权限配置' }
+      ]
+    },
+    {
+      key: 'menus',
+      title: '菜单管理',
+      icon: <UnorderedListOutlined />,
+      children: [
+        { key: 'menus-list', title: '菜单列表' },
+        { key: 'menus-add', title: '添加菜单' },
+        { key: 'menus-sort', title: '排序设置' }
+      ]
+    },
+    {
+      key: 'more',
+      title: '未完待续',
+      icon: <SettingOutlined />,
+      children: [
+        { key: 'more-settings', title: '系统设置' },
+        { key: 'more-help', title: '帮助文档' },
+        { key: 'more-about', title: '关于系统' }
+      ]
+    }
+  ];
 
   // 获取用户信息
   useEffect(() => {
@@ -57,6 +113,12 @@ const MainPage = ({ setIsAuthenticated }) => {
     }
   };
 
+  // 处理菜单点击
+  const handleMenuClick = ({ key }) => {
+    console.log('点击菜单:', key);
+    // 这里可以根据菜单项的key进行路由跳转或其他操作
+  };
+
   return (
     <Layout className="main-container">
       <Header className="header">
@@ -73,26 +135,59 @@ const MainPage = ({ setIsAuthenticated }) => {
           </Button>
         </div>
       </Header>
-      <Content className="content">
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '30px' }}>
-          <Title level={2}>
-            <UserOutlined /> 欢迎回来，{userInfo?.username || '用户'}
-          </Title>
-          
-          {/* 旋转地球效果 */}
-          <div className="earth-container">
-            <div className="earth"></div>
+      
+      <Layout>
+        {/* 侧边导航菜单 */}
+        <Sider 
+          width={250} 
+          theme="light" 
+          className="sider"
+          collapsible
+          collapsed={collapsed}
+          onCollapse={() => setCollapsed(!collapsed)}
+        >
+          <div className="logo" style={{ padding: '20px', textAlign: 'center', fontSize: '18px', fontWeight: 'bold' }}>
+            系统菜单
           </div>
-          
-          {userInfo && (
-            <div>
-              <Paragraph>ID: {userInfo.id}</Paragraph>
-              <Paragraph>邮箱: {userInfo.email}</Paragraph>
-              <Paragraph>手机号: {userInfo.phone || '未设置'}</Paragraph>
+          <Menu
+            mode="inline"
+            theme="light"
+            onClick={handleMenuClick}
+            style={{ height: '100%', borderRight: 0 }}
+            // 由于antd v5的Menu组件API变更，这里使用items属性而不是直接遍历
+            items={menuItems.map(item => ({
+              key: item.key,
+              icon: item.icon,
+              label: item.title,
+              children: item.children?.map(child => ({
+                key: child.key,
+                label: child.title
+              }))
+            }))}
+          />
+        </Sider>
+
+        <Content className="content">
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '30px' }}>
+            <Title level={2}>
+              <UserOutlined /> 欢迎回来，{userInfo?.username || '用户'}
+            </Title>
+            
+            {/* 旋转地球效果 */}
+            <div className="earth-container">
+              <div className="earth"></div>
             </div>
-          )}
-        </div>
-      </Content>
+            
+            {userInfo && (
+              <div>
+                <Paragraph>ID: {userInfo.id}</Paragraph>
+                <Paragraph>邮箱: {userInfo.email}</Paragraph>
+                <Paragraph>手机号: {userInfo.phone || '未设置'}</Paragraph>
+              </div>
+            )}
+          </div>
+        </Content>
+      </Layout>
       
       <style jsx>{`
         .main-container {
@@ -104,6 +199,11 @@ const MainPage = ({ setIsAuthenticated }) => {
           justify-content: space-between;
           align-items: center;
           padding: 0 24px;
+        }
+        
+        .sider {
+          overflow: auto;
+          height: calc(100vh - 64px);
         }
         
         .content {
