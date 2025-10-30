@@ -9,9 +9,8 @@ import io.swagger.v3.oas.annotations.Operation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+import javax.validation.Valid;
 
 /**
  * 用户控制器
@@ -45,5 +44,45 @@ public class UserController {
         userInfo.setPhone(user.getPhone());
         
         return ApiResponse.success(userInfo);
+    }
+    
+    /**
+     * 获取所有用户列表
+     */
+    @GetMapping
+    @Operation(summary = "获取所有用户列表")
+    public ApiResponse<?> getAllUsers() {
+        return ApiResponse.success(userService.getAllUsers());
+    }
+    
+    /**
+     * 更新用户信息
+     */
+    @PutMapping("/{id}")
+    @Operation(summary = "更新用户信息")
+    public ApiResponse<?> updateUser(@PathVariable Long id, @Valid @RequestBody User user) {
+        user.setId(id);
+        userService.updateUser(user);
+        return ApiResponse.success();
+    }
+    
+    /**
+     * 添加用户
+     */
+    @PostMapping
+    @Operation(summary = "添加用户")
+    public ApiResponse<?> addUser(@Valid @RequestBody User user) {
+        userService.addUser(user);
+        return ApiResponse.success();
+    }
+    
+    /**
+     * 删除用户
+     */
+    @DeleteMapping("/{id}")
+    @Operation(summary = "删除用户")
+    public ApiResponse<?> deleteUser(@PathVariable Long id) {
+        userService.deleteUser(id);
+        return ApiResponse.success();
     }
 }

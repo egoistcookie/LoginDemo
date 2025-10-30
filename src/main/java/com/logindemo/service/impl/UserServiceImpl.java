@@ -18,6 +18,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Objects;
 
 /**
@@ -72,14 +73,14 @@ public class UserServiceImpl implements UserService {
             logger.debug("检查用户名是否已存在: {}", request.getUsername());
             if (Objects.nonNull(userMapper.findByUsername(request.getUsername()))) {
                 logger.warn("用户名已存在: {}", request.getUsername());
-                throw new BusinessException("用户名已存在");
+                throw new BusinessException(400, "用户名已存在");
             }
 
             // 检查邮箱是否已存在
             logger.debug("检查邮箱是否已存在: {}", request.getEmail());
             if (Objects.nonNull(userMapper.findByEmail(request.getEmail()))) {
                 logger.warn("邮箱已被注册: {}", request.getEmail());
-                throw new BusinessException("邮箱已被注册");
+                throw new BusinessException(400, "邮箱已被注册");
             }
 
             // 检查手机号是否已存在
@@ -242,6 +243,130 @@ public class UserServiceImpl implements UserService {
         }
         // 验证Token
         return jwtUtils.validateToken(token);
+    }
+
+    @Override
+    public List<User> getAllUsers() {
+        logger.info("获取所有用户列表");
+        try {
+            return userMapper.selectList(null);
+        } catch (Exception e) {
+            logger.error("获取用户列表失败", e);
+            throw new BusinessException("获取用户列表失败");
+        }
+    }
+
+    @Override
+    @Transactional
+    public boolean updateUser(User user) {
+        logger.info("更新用户信息，用户ID: {}", user.getId());
+        try {
+            // 检查用户是否存在
+            User existingUser = userMapper.selectById(user.getId());
+            if (Objects.isNull(existingUser)) {
+                logger.warn("用户不存在，ID: {}", user.getId());
+                throw new BusinessException("用户不存在");
+            }
+
+            // 检查邮箱是否被其他用户使用
+            if (!existingUser.getEmail().equals(user.getEmail())) {
+                User userWithSameEmail = userMapper.findByEmail(user.getEmail());
+                if (Objects.nonNull(userWithSameEmail) && !userWithSameEmail.getId().equals(user.getId())) {
+                    logger.warn("邮箱已被其他用户使用: {}", user.getEmail());
+                    throw new BusinessException(400, "邮箱已被使用");
+                }
+            }
+
+            // 检查手机号是否被其他用户使用
+            if (Objects.nonNull(user.getPhone()) && (Objects.isNull(existingUser.getPhone()) || !existingUser.getPhone().equals(user.getPhone()))) {
+                if (userMapper.selectCount(new QueryWrapper<User>().eq("phone", user.getPhone()).ne("id", user.getId())) > 0) {
+                    logger.warn("手机号已被其他用户使用: {}", user.getPhone());
+                    throw new BusinessException(400, "手机号已被其他用户使用: " + user.getPhone());
+                }
+            }
+
+            // 设置更新时间
+            user.setUpdatedAt(LocalDateTime.now());
+            
+            // 不更新密码字段（密码更新应该有专门的方法）
+            user.setPassword(existingUser.getPassword());
+            
+            int result = userMapper.updateById(user);
+            logger.info("用户更新成功，ID: {}", user.getId());
+            return result > 0;
+        } catch (BusinessException e) {
+            throw e;
+        } catch (Exception e) {
+            logger.error("更新用户失败，ID: {}", user.getId(), e);
+            throw new BusinessException(400, "更新用户失败");
+        }
+    }
+
+    @Override
+    @Transactional
+    public boolean addUser(User user) {
+        logger.info("添加新用户，用户名: {}", user.getUsername());
+        try {
+            // 检查用户名是否已存在
+            if (Objects.nonNull(userMapper.findByUsername(user.getUsername()))) {
+                logger.warn("用户名已存在: {}", user.getUsername());
+                throw new BusinessException("用户名已存在");
+            }
+
+            // 检查邮箱是否已存在
+            if (Objects.nonNull(userMapper.findByEmail(user.getEmail()))) {
+                logger.warn("邮箱已被注册: {}", user.getEmail());
+                throw new BusinessException("邮箱已被注册");
+            }
+
+            // 检查手机号是否已存在
+            if (Objects.nonNull(user.getPhone()) && !user.getPhone().isEmpty()
+                    && Objects.nonNull(userMapper.findByPhone(user.getPhone()))) {
+                logger.warn("手机号已被注册: {}", user.getPhone());
+                throw new BusinessException("手机号已被注册");
+            }
+
+            // 设置创建和更新时间
+            user.setCreatedAt(LocalDateTime.now());
+            user.setUpdatedAt(LocalDateTime.now());
+            
+            // 如果密码未加密，进行加密
+            if (!user.getPassword().startsWith("$2a$")) {
+                user.setPassword(passwordUtils.encode(user.getPassword()));
+            }
+            
+            int result = userMapper.insert(user);
+            logger.info("用户添加成功，ID: {}", user.getId());
+            return result > 0;
+        } catch (BusinessException e) {
+            throw e;
+        } catch (Exception e) {
+            logger.error("添加用户失败，用户名: {}", user.getUsername(), e);
+            throw new BusinessException("添加用户失败");
+        }
+    }
+
+    @Override
+    @Transactional
+    public boolean deleteUser(Long id) {
+        logger.info("删除用户，ID: {}", id);
+        try {
+            // 检查用户是否存在
+            User user = userMapper.selectById(id);
+            if (Objects.isNull(user)) {
+                logger.warn("用户不存在，ID: {}", id);
+                throw new BusinessException("用户不存在");
+            }
+            
+            int result = userMapper.deleteById(id);
+            logger.info("用户删除成功，ID: {}", id);
+            return result > 0;
+        } catch (BusinessException e) {
+            throw e;
+        } catch (Exception e) {
+            logger.error("删除用户失败，ID: {}", id, e);
+            throw new BusinessException("删除用户失败");
+        }
     }
 
     /**

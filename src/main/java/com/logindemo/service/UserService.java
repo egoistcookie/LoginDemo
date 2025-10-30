@@ -4,6 +4,7 @@ import com.logindemo.model.User;
 import com.logindemo.model.dto.AuthResponse;
 import com.logindemo.model.dto.LoginRequest;
 import com.logindemo.model.dto.RegisterRequest;
+import java.util.List;
 
 /**
  * 用户服务接口
@@ -44,4 +45,24 @@ public interface UserService {
      * 验证Token
      */
     boolean validateToken(String token);
+    
+    /**
+     * 获取所有用户列表
+     */
+    List<User> getAllUsers();
+    
+    /**
+     * 更新用户信息
+     */
+    boolean updateUser(User user);
+    
+    /**
+     * 添加用户
+     */
+    boolean addUser(User user);
+    
+    /**
+     * 删除用户
+     */
+    boolean deleteUser(Long id);
 }

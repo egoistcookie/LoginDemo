@@ -22,11 +22,16 @@ axios.interceptors.request.use(config => {
 axios.interceptors.response.use(
   response => response,
   error => {
-    if (error.response && error.response.status === 401) {
-      // Token过期，清除本地存储并跳转到登录页
-      localStorage.removeItem('accessToken');
-      localStorage.removeItem('refreshToken');
-      window.location.href = '/login';
+    if (error.response) {
+      if (error.response.status === 401) {
+        // Token过期，清除本地存储并跳转到登录页
+        localStorage.removeItem('accessToken');
+        localStorage.removeItem('refreshToken');
+        window.location.href = '/login';
+      } else if (error.response.status === 400 && error.response.data && error.response.data.message) {
+        // 对于400错误，如果有错误信息，将其传递给Promise rejection
+        error.message = error.response.data.message;
+      }
     }
     return Promise.reject(error);
   }

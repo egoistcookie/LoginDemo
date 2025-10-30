@@ -93,7 +93,9 @@ const UsersListPage = () => {
         message.error(response.data.message || '更新失败');
       }
     } catch (error) {
-      message.error('更新失败：' + error.message);
+      // 错误消息优先级：error.response.data.message > error.message > 默认消息
+      const errorMsg = error.response?.data?.message || error.message || '更新失败：未知错误';
+      message.error(errorMsg);
     }
   };
 
@@ -101,6 +103,10 @@ const UsersListPage = () => {
   const handleAdd = () => {
     form.resetFields();
     setIsAddModalVisible(true);
+    // 确保弹窗渲染完成后再设置默认值
+    setTimeout(() => {
+      form.setFieldsValue({ status: 1 });
+    }, 0);
   };
 
   // 保存添加
@@ -119,7 +125,9 @@ const UsersListPage = () => {
         message.error(response.data.message || '添加失败');
       }
     } catch (error) {
-      message.error('添加失败：' + error.message);
+      // 错误消息优先级：error.response.data.message > error.message > 默认消息
+      const errorMsg = error.response?.data?.message || error.message || '添加失败：未知错误';
+      message.error(errorMsg);
     }
   };
 
@@ -179,9 +187,14 @@ const UsersListPage = () => {
     },
     {
       title: '创建时间',
-      dataIndex: 'created_at',
-      key: 'created_at',
-      render: (time) => new Date(time).toLocaleString(),
+      dataIndex: 'createdAt',
+      key: 'createdAt',
+      render: (time) => {
+        // 检查时间字段是否有效，避免显示Invalid Date
+        if (!time) return '-';
+        const date = new Date(time);
+        return isNaN(date.getTime()) ? '-' : date.toLocaleString();
+      },
     },
     {
       title: '操作',
@@ -374,14 +387,16 @@ const UsersListPage = () => {
         </Form>
       </Modal>
 
-      <style jsx>{`
+      <style>
+        {`
         .users-list-container {
           padding: 24px;
           background: #fff;
           border-radius: 8px;
           box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
         }
-      `}</style>
+        `}
+      </style>
     </div>
   );
 };

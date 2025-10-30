@@ -1,12 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { Layout, Typography, Button, message, Menu } from 'antd';
-import { LogoutOutlined, UserOutlined, HomeOutlined, UserAddOutlined, UnorderedListOutlined, AppstoreOutlined, SettingOutlined } from '@ant-design/icons';
+import { LogoutOutlined, UserOutlined, HomeOutlined, UserAddOutlined, UnorderedListOutlined, SettingOutlined } from '@ant-design/icons';
 import axios from 'axios';
 import UsersListPage from './UsersListPage';
 
 const { Header, Content, Sider } = Layout;
 const { Title, Paragraph } = Typography;
-const { SubMenu } = Menu;
 
 const MainPage = ({ setIsAuthenticated }) => {
   const [userInfo, setUserInfo] = useState(null);
