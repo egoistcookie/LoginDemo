@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Form, Input, Button, Checkbox, message, Typography, Card } from 'antd';
 import { UserOutlined, LockOutlined } from '@ant-design/icons';
 import { Link, useNavigate } from 'react-router-dom';
@@ -9,6 +9,48 @@ const { Title } = Typography;
 const LoginPage = ({ setIsAuthenticated }) => {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const [form] = Form.useForm();
+
+  // 自动登录功能 - 在页面加载时自动尝试登录
+  useEffect(() => {
+    // 默认的测试账号
+    const defaultCredentials = {
+      username: '1111',
+      password: '111111'
+    };
+    
+    // 直接调用登录方法
+    handleAutoLogin(defaultCredentials);
+  }, []);
+
+  // 自动登录处理函数
+  const handleAutoLogin = async (credentials) => {
+    setLoading(true);
+    try {
+      const response = await axios.post('/auth/login', credentials);
+      if (response.data.code === 200) {
+        // 保存Token到本地存储
+        localStorage.setItem('accessToken', response.data.data.accessToken);
+        localStorage.setItem('refreshToken', response.data.data.refreshToken);
+        
+        // 设置认证状态
+        setIsAuthenticated(true);
+        
+        // 显示成功消息
+        message.success('自动登录成功');
+        
+        // 跳转到主页
+        navigate('/');
+      } else {
+        message.error(response.data.message || '登录失败，请手动输入账号密码');
+      }
+    } catch (error) {
+      // 错误时不显示消息，允许用户手动登录
+      console.log('自动登录失败，允许手动登录', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const onFinish = async (values) => {
     setLoading(true);
@@ -46,8 +88,9 @@ const LoginPage = ({ setIsAuthenticated }) => {
       <Card className="login-form">
         <Title level={2} className="login-form-title">用户登录</Title>
         <Form
+          form={form}
           name="normal_login"
-          initialValues={{ remember: true }}
+          initialValues={{ remember: true, username: '1111', password: '111111' }}
           onFinish={onFinish}
         >
           <Form.Item
