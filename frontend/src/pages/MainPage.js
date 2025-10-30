@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Layout, Typography, Button, message, Menu } from 'antd';
 import { LogoutOutlined, UserOutlined, HomeOutlined, UserAddOutlined, UnorderedListOutlined, AppstoreOutlined, SettingOutlined } from '@ant-design/icons';
 import axios from 'axios';
+import UsersListPage from './UsersListPage';
 
 const { Header, Content, Sider } = Layout;
 const { Title, Paragraph } = Typography;
@@ -11,6 +12,7 @@ const MainPage = ({ setIsAuthenticated }) => {
   const [userInfo, setUserInfo] = useState(null);
   const [loading, setLoading] = useState(false);
   const [collapsed, setCollapsed] = useState(false);
+  const [activePage, setActivePage] = useState('home-dashboard');
 
   // 菜单项数据
   const menuItems = [
@@ -116,7 +118,7 @@ const MainPage = ({ setIsAuthenticated }) => {
   // 处理菜单点击
   const handleMenuClick = ({ key }) => {
     console.log('点击菜单:', key);
-    // 这里可以根据菜单项的key进行路由跳转或其他操作
+    setActivePage(key);
   };
 
   return (
@@ -168,24 +170,28 @@ const MainPage = ({ setIsAuthenticated }) => {
         </Sider>
 
         <Content className="content">
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '30px' }}>
-            <Title level={2}>
-              <UserOutlined /> 欢迎回来，{userInfo?.username || '用户'}
-            </Title>
-            
-            {/* 旋转地球效果 */}
-            <div className="earth-container">
-              <div className="earth"></div>
-            </div>
-            
-            {userInfo && (
-              <div>
-                <Paragraph>ID: {userInfo.id}</Paragraph>
-                <Paragraph>邮箱: {userInfo.email}</Paragraph>
-                <Paragraph>手机号: {userInfo.phone || '未设置'}</Paragraph>
+          {activePage === 'users-list' ? (
+            <UsersListPage />
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '30px' }}>
+              <Title level={2}>
+                <UserOutlined /> 欢迎回来，{userInfo?.username || '用户'}
+              </Title>
+              
+              {/* 旋转地球效果 */}
+              <div className="earth-container">
+                <div className="earth"></div>
               </div>
-            )}
-          </div>
+              
+              {userInfo && (
+                <div>
+                  <Paragraph>ID: {userInfo.id}</Paragraph>
+                  <Paragraph>邮箱: {userInfo.email}</Paragraph>
+                  <Paragraph>手机号: {userInfo.phone || '未设置'}</Paragraph>
+                </div>
+              )}
+            </div>
+          )}
         </Content>
       </Layout>
       
@@ -207,7 +213,7 @@ const MainPage = ({ setIsAuthenticated }) => {
         }
         
         .content {
-          padding: 40px;
+          padding: 24px;
           background-color: #f0f2f5;
           min-height: calc(100vh - 64px);
         }

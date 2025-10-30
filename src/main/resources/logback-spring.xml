@@ -37,6 +37,23 @@
         <appender-ref ref="FILE" />
     </root>
     
+    <!-- 设置RedisUtils的日志级别为ERROR，隐藏Redis连接错误 -->
+    <logger name="com.logindemo.utils.RedisUtils" level="ERROR" additivity="false">
+        <appender-ref ref="CONSOLE" />
+        <appender-ref ref="FILE" />
+    </logger>
+    
+    <!-- 为GlobalExceptionHandler中的Redis异常设置ERROR级别 -->
+    <logger name="com.logindemo.exception.GlobalExceptionHandler" level="WARN" additivity="false">
+        <appender-ref ref="CONSOLE" />
+        <appender-ref ref="FILE" />
+    </logger>
+    
+    <!-- 为Redis相关的异常类设置ERROR级别 -->
+    <logger name="org.springframework.data.redis" level="ERROR" />
+    <logger name="io.lettuce" level="ERROR" />
+    
+    <!-- 其他应用代码保持DEBUG级别 -->
     <logger name="com.logindemo" level="DEBUG" additivity="false">
         <appender-ref ref="CONSOLE" />
         <appender-ref ref="FILE" />
