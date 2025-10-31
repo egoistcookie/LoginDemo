@@ -3,10 +3,12 @@ package com.logindemo.service.impl;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.logindemo.exception.BusinessException;
 import com.logindemo.mapper.UserMapper;
+import com.logindemo.model.Menu;
 import com.logindemo.model.User;
 import com.logindemo.model.dto.AuthResponse;
 import com.logindemo.model.dto.LoginRequest;
 import com.logindemo.model.dto.RegisterRequest;
+import com.logindemo.service.MenuService;
 import com.logindemo.service.UserService;
 import com.logindemo.utils.JwtUtils;
 import com.logindemo.utils.PasswordUtils;
@@ -33,6 +35,9 @@ public class UserServiceImpl implements UserService {
 
     @Autowired
     private UserMapper userMapper;
+
+    @Autowired
+    private MenuService menuService;
 
     @Autowired
     private JwtUtils jwtUtils;
@@ -406,5 +411,14 @@ public class UserServiceImpl implements UserService {
         map.put("createdAt", user.getCreatedAt());
         map.put("updatedAt", user.getUpdatedAt());
         return map;
+    }
+    
+    @Override
+    public List<Menu> getUserMenus(String username) {
+        // 获取用户的角色ID列表
+        List<Long> roleIds = userMapper.selectRoleIdsByUsername(username);
+        
+        // 根据角色ID列表获取菜单树
+        return menuService.getUserMenuTree(roleIds);
     }
 }

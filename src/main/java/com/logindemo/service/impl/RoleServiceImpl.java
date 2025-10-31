@@ -26,7 +26,11 @@ public class RoleServiceImpl extends ServiceImpl<RoleMapper, Role> implements Ro
     @Override
     public Role saveRole(Role role) {
         // 如果ID不为空则更新，否则新增
-        this.save(role);
+        if (role.getId() != null) {
+            this.updateById(role);
+        } else {
+            this.save(role);
+        }
         return role;
     }
     

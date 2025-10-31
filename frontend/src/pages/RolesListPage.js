@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Table, Button, Modal, Form, Input, message, Typography } from 'antd';
-import { PlusOutlined, DeleteOutlined, EditOutlined, ReloadOutlined } from '@ant-design/icons';
+import { Table, Button, Modal, Form, Input, message, Typography, TreeSelect } from 'antd';
+import { PlusOutlined, DeleteOutlined, EditOutlined, ReloadOutlined, UnorderedListOutlined } from '@ant-design/icons';
 import axios from 'axios';
 
 const { Title } = Typography;
@@ -12,6 +12,11 @@ const RolesListPage = () => {
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [editingRole, setEditingRole] = useState(null);
   const [confirmLoading, setConfirmLoading] = useState(false);
+  const [isMenuModalVisible, setIsMenuModalVisible] = useState(false);
+  const [currentRole, setCurrentRole] = useState(null);
+  const [selectedMenus, setSelectedMenus] = useState([]);
+  const [allMenus, setAllMenus] = useState([]);
+  const [menuLoading, setMenuLoading] = useState(false);
 
   // 加载角色数据
   const loadRoles = async () => {
@@ -83,6 +88,104 @@ const RolesListPage = () => {
         }
       }
     });
+  };
+  
+  // 加载所有菜单
+  const loadAllMenus = async () => {
+    try {
+      const token = localStorage.getItem('accessToken');
+      const response = await axios.get('/menus', {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      if (response.data.code === 200) {
+        // 将菜单转换为树形结构
+        const menus = response.data.data;
+        const topMenus = menus.filter(menu => menu.parentId === 0);
+        const menuMap = new Map();
+        
+        // 创建菜单映射
+        menus.forEach(menu => {
+          menuMap.set(menu.id, {
+            title: menu.name,
+            value: menu.id,
+            key: menu.id,
+            children: []
+          });
+        });
+        
+        // 构建树形结构
+        menus.forEach(menu => {
+          if (menu.parentId !== 0 && menuMap.has(menu.parentId)) {
+            menuMap.get(menu.parentId).children.push(menuMap.get(menu.id));
+          }
+        });
+        
+        // 转换为数组，只取顶级菜单作为根节点
+        const treeMenus = menus.filter(menu => menu.parentId === 0).map(menu => menuMap.get(menu.id));
+        setAllMenus(treeMenus);
+      }
+    } catch (error) {
+      console.error('加载菜单失败:', error);
+      message.error('加载菜单失败');
+    }
+  };
+  
+  // 处理配置菜单
+  const handleConfigureMenus = async (role) => {
+    setCurrentRole(role);
+    setIsMenuModalVisible(true);
+    setMenuLoading(true);
+    
+    try {
+      // 加载所有菜单
+      await loadAllMenus();
+      
+      // 加载角色已有的菜单权限
+      const token = localStorage.getItem('accessToken');
+      const response = await axios.get(`/roles/${role.id}/menus`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      if (response.data.code === 200) {
+        setSelectedMenus(response.data.data || []);
+      }
+    } catch (error) {
+      console.error('获取角色菜单权限失败:', error);
+      message.error('获取角色菜单权限失败');
+    } finally {
+      setMenuLoading(false);
+    }
+  };
+  
+  // 处理菜单权限保存
+  const handleSaveMenuPermissions = async () => {
+    if (!currentRole) return;
+    
+    try {
+      setMenuLoading(true);
+      const token = localStorage.getItem('accessToken');
+      const response = await axios.put(`/roles/${currentRole.id}/menus`, selectedMenus, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      if (response.data.code === 200 && response.data.data) {
+        message.success('菜单权限配置成功');
+        setIsMenuModalVisible(false);
+      } else {
+        message.error(response.data.message || '菜单权限配置失败');
+      }
+    } catch (error) {
+      console.error('保存菜单权限失败:', error);
+      message.error('保存菜单权限失败');
+    } finally {
+      setMenuLoading(false);
+    }
+  };
+  
+  // 处理菜单选择变化
+  const handleMenuSelectionChange = (values) => {
+    setSelectedMenus(values);
   };
 
   // 处理表单提交
@@ -167,6 +270,14 @@ const RolesListPage = () => {
           </Button>
           <Button
             type="link"
+            icon={<UnorderedListOutlined />}
+            onClick={() => handleConfigureMenus(record)}
+            style={{ marginRight: 8 }}
+          >
+            配置菜单
+          </Button>
+          <Button
+            type="link"
             danger
             icon={<DeleteOutlined />}
             onClick={() => handleDeleteRole(record)}
@@ -246,6 +357,35 @@ const RolesListPage = () => {
             <Input.TextArea placeholder="请输入角色描述" rows={3} />
           </Form.Item>
         </Form>
+      </Modal>
+      
+      {/* 菜单权限配置模态框 */}
+      <Modal
+        title={`配置角色「${currentRole?.name}」的菜单权限`}
+        open={isMenuModalVisible}
+        onOk={handleSaveMenuPermissions}
+        onCancel={() => setIsMenuModalVisible(false)}
+        okText="确定"
+        cancelText="取消"
+        confirmLoading={menuLoading}
+        width={600}
+      >
+        <div style={{ maxHeight: 400, overflowY: 'auto' }}>
+          {menuLoading ? (
+            <div style={{ textAlign: 'center', padding: '40px 0' }}>加载中...</div>
+          ) : (
+            <TreeSelect
+              multiple
+              checkable
+              treeDefaultExpandAll
+              value={selectedMenus}
+              onChange={handleMenuSelectionChange}
+              treeData={allMenus}
+              placeholder="请选择菜单权限"
+              style={{ width: '100%' }}
+            />
+          )}
+        </div>
       </Modal>
 
       <style jsx>{`

@@ -1,6 +1,7 @@
 package com.logindemo.service;
 
 import com.logindemo.model.User;
+import com.logindemo.model.Menu;
 import com.logindemo.model.dto.AuthResponse;
 import com.logindemo.model.dto.LoginRequest;
 import com.logindemo.model.dto.RegisterRequest;
@@ -72,4 +73,9 @@ public interface UserService {
      * 将User对象转换为Map
      */
     Map<String, Object> convertUserToMap(User user);
+    
+    /**
+     * 获取用户的菜单列表
+     */
+    List<Menu> getUserMenus(String username);
 }

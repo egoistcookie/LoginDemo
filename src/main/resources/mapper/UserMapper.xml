@@ -10,7 +10,13 @@
         SELECT * FROM users WHERE email = #{email}
     </select>
     
-    <select id="findByPhone" resultType="com.logindemo.model.User">
+    <select id="findByPhone" parameterType="String" resultType="com.logindemo.model.User">
         SELECT * FROM users WHERE phone = #{phone}
+    </select>
+    
+    <select id="selectRoleIdsByUsername" parameterType="String" resultType="Long">
+        SELECT ur.role_id FROM users u
+        JOIN user_roles ur ON u.id = ur.user_id
+        WHERE u.username = #{username}
     </select>
 </mapper>

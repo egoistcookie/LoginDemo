@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.logindemo.mapper.RoleMenuMapper">
+    
+    <select id="selectMenuIdsByRoleId" resultType="java.lang.Long">
+        SELECT menu_id FROM role_menus WHERE role_id = #{roleId}
+    </select>
+    
+    <select id="selectRoleIdsByMenuId" resultType="java.lang.Long">
+        SELECT role_id FROM role_menus WHERE menu_id = #{menuId}
+    </select>
+    
+    <insert id="insertBatch">
+        INSERT INTO role_menus (role_id, menu_id, created_at) VALUES
+        <foreach collection="menuIds" item="menuId" separator=",">
+            (#{roleId}, #{menuId}, NOW())
+        </foreach>
+    </insert>
+    
+    <delete id="deleteByRoleId">
+        DELETE FROM role_menus WHERE role_id = #{roleId}
+    </delete>
+</mapper>

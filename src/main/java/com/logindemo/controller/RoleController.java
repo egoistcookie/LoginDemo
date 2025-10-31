@@ -3,6 +3,7 @@ package com.logindemo.controller;
 import com.logindemo.model.Role;
 import com.logindemo.model.dto.ApiResponse;
 import com.logindemo.service.RoleService;
+import com.logindemo.service.RoleMenuService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -17,6 +18,9 @@ public class RoleController {
     
     @Autowired
     private RoleService roleService;
+    
+    @Autowired
+    private RoleMenuService roleMenuService;
     
     /**
      * 获取所有角色
@@ -53,5 +57,23 @@ public class RoleController {
     public ResponseEntity<ApiResponse<Void>> deleteRole(@PathVariable Long id) {
         roleService.deleteRole(id);
         return ResponseEntity.ok(ApiResponse.success(null));
+    }
+    
+    /**
+     * 获取角色的菜单权限列表
+     */
+    @GetMapping("/{roleId}/menus")
+    public ResponseEntity<ApiResponse<List<Long>>> getRoleMenus(@PathVariable Long roleId) {
+        List<Long> menuIds = roleMenuService.getMenuIdsByRoleId(roleId);
+        return ResponseEntity.ok(ApiResponse.success(menuIds));
+    }
+    
+    /**
+     * 为角色配置菜单权限
+     */
+    @PutMapping("/{roleId}/menus")
+    public ResponseEntity<ApiResponse<Boolean>> assignMenusToRole(@PathVariable Long roleId, @RequestBody List<Long> menuIds) {
+        boolean success = roleMenuService.assignMenusToRole(roleId, menuIds);
+        return ResponseEntity.ok(ApiResponse.success(success));
     }
 }

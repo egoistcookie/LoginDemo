@@ -1,9 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { Layout, Typography, Button, message, Menu } from 'antd';
-import { LogoutOutlined, UserOutlined, HomeOutlined, UserAddOutlined, UnorderedListOutlined, SettingOutlined } from '@ant-design/icons';
+import { LogoutOutlined, UserOutlined, HomeOutlined, UserAddOutlined, UnorderedListOutlined, SettingOutlined, 
+         BarChartOutlined, FileTextOutlined, DatabaseOutlined, FileAddOutlined, DownloadOutlined,
+         ToolOutlined, BookOutlined, InfoCircleOutlined } from '@ant-design/icons';
 import axios from 'axios';
 import UsersListPage from './UsersListPage';
 import RolesListPage from './RolesListPage';
+import MenusListPage from './MenusListPage';
 
 const { Header, Content, Sider } = Layout;
 const { Title, Paragraph } = Typography;
@@ -13,75 +16,90 @@ const MainPage = ({ setIsAuthenticated }) => {
   const [loading, setLoading] = useState(false);
   const [collapsed, setCollapsed] = useState(false);
   const [activePage, setActivePage] = useState('home-dashboard');
+  const [menuItems, setMenuItems] = useState([]);
+  const [menuLoading, setMenuLoading] = useState(true);
+  
+  // 根据菜单key获取对应的图标
+  const getMenuIcon = (menuKey) => {
+    const iconMap = {
+      'home': <HomeOutlined />,
+      'dashboard': <BarChartOutlined />,
+      'stats': <FileTextOutlined />,
+      'overview': <DatabaseOutlined />,
+      'users': <UserAddOutlined />,
+      'users-list': <UserOutlined />,
+      'users-add': <FileAddOutlined />,
+      'users-import': <DownloadOutlined />,
+      'roles': <UserOutlined />,
+      'roles-list': <UserOutlined />,
+      'roles-add': <FileAddOutlined />,
+      'roles-permissions': <UnorderedListOutlined />,
+      'menus': <UnorderedListOutlined />,
+      'menus-list': <UnorderedListOutlined />,
+      'menus-add': <FileAddOutlined />,
+      'menus-sort': <SettingOutlined />,
+      'more': <SettingOutlined />,
+      'settings': <SettingOutlined />,
+      'help': <BookOutlined />,
+      'about': <InfoCircleOutlined />
+    };
+    return iconMap[menuKey] || <UnorderedListOutlined />;
+  };
+  
+  // 构建菜单结构
+  const buildMenuItems = (menus) => {
+    return menus.map(menu => {
+      const item = {
+        key: menu.key,
+        icon: getMenuIcon(menu.key),
+        label: menu.name
+      };
+      
+      if (menu.children && menu.children.length > 0) {
+        item.children = buildMenuItems(menu.children);
+      }
+      
+      return item;
+    });
+  };
 
-  // 菜单项数据
-  const menuItems = [
-    {
-      key: 'home',
-      title: '首页',
-      icon: <HomeOutlined />,
-      children: [
-        { key: 'home-dashboard', title: '数据看板' },
-        { key: 'home-stats', title: '统计报表' },
-        { key: 'home-overview', title: '概览信息' }
-      ]
-    },
-    {
-      key: 'users',
-      title: '人员管理',
-      icon: <UserAddOutlined />,
-      children: [
-        { key: 'users-list', title: '用户列表' },
-        { key: 'users-add', title: '添加用户' },
-        { key: 'users-import', title: '导入用户' }
-      ]
-    },
-    {
-      key: 'roles',
-      title: '角色管理',
-      icon: <UserOutlined />,
-      children: [
-        { key: 'roles-list', title: '角色列表' },
-        { key: 'roles-add', title: '创建角色' },
-        { key: 'roles-permissions', title: '权限配置' }
-      ]
-    },
-    {
-      key: 'menus',
-      title: '菜单管理',
-      icon: <UnorderedListOutlined />,
-      children: [
-        { key: 'menus-list', title: '菜单列表' },
-        { key: 'menus-add', title: '添加菜单' },
-        { key: 'menus-sort', title: '排序设置' }
-      ]
-    },
-    {
-      key: 'more',
-      title: '未完待续',
-      icon: <SettingOutlined />,
-      children: [
-        { key: 'more-settings', title: '系统设置' },
-        { key: 'more-help', title: '帮助文档' },
-        { key: 'more-about', title: '关于系统' }
-      ]
-    }
-  ];
-
-  // 获取用户信息
+  // 获取用户信息和菜单
   useEffect(() => {
-    const fetchUserInfo = async () => {
+    const fetchData = async () => {
       try {
-        const response = await axios.get('/users/me');
-        if (response.data.code === 200) {
-          setUserInfo(response.data.data);
+        // 获取用户信息
+        const userResponse = await axios.get('/users/me');
+        if (userResponse.data.code === 200) {
+          setUserInfo(userResponse.data.data);
+        }
+        
+        // 获取用户菜单
+        setMenuLoading(true);
+        const menuResponse = await axios.get('/auth/user-menu');
+        if (menuResponse.data.code === 200 && menuResponse.data.data) {
+          const menus = menuResponse.data.data;
+          const items = buildMenuItems(menus);
+          setMenuItems(items);
+          
+          // 如果有菜单项，默认激活第一个
+          if (items.length > 0) {
+            const firstItem = items[0];
+            if (firstItem.children && firstItem.children.length > 0) {
+              setActivePage(firstItem.children[0].key);
+            } else {
+              setActivePage(firstItem.key);
+            }
+          }
         }
       } catch (error) {
-        message.error('获取用户信息失败');
+        message.error('获取数据失败');
+        console.error('Error fetching data:', error);
+      } finally {
+        setMenuLoading(false);
       }
     };
 
-    fetchUserInfo();
+    fetchData();
   }, []);
 
   // 登出
@@ -99,6 +117,9 @@ const MainPage = ({ setIsAuthenticated }) => {
       localStorage.removeItem('accessToken');
       localStorage.removeItem('refreshToken');
       
+      // 设置明确的登出标志，表示这是用户主动登出而不是页面刷新
+      sessionStorage.setItem('userInitiatedLogout', 'true');
+      
       // 设置认证状态
       setIsAuthenticated(false);
       
@@ -108,6 +129,7 @@ const MainPage = ({ setIsAuthenticated }) => {
       // 即使后端出错，也要清除本地状态
       localStorage.removeItem('accessToken');
       localStorage.removeItem('refreshToken');
+      sessionStorage.setItem('userInitiatedLogout', 'true');
       setIsAuthenticated(false);
       message.success('登出成功');
     } finally {
@@ -156,16 +178,9 @@ const MainPage = ({ setIsAuthenticated }) => {
             theme="light"
             onClick={handleMenuClick}
             style={{ height: '100%', borderRight: 0 }}
-            // 由于antd v5的Menu组件API变更，这里使用items属性而不是直接遍历
-            items={menuItems.map(item => ({
-              key: item.key,
-              icon: item.icon,
-              label: item.title,
-              children: item.children?.map(child => ({
-                key: child.key,
-                label: child.title
-              }))
-            }))}
+            items={menuItems}
+            loading={menuLoading}
+            selectedKeys={[activePage]}
           />
         </Sider>
 
@@ -174,11 +189,21 @@ const MainPage = ({ setIsAuthenticated }) => {
             <UsersListPage />
           ) : activePage === 'roles-list' ? (
             <RolesListPage />
+          ) : activePage === 'menus-list' ? (
+            <MenusListPage />
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '30px' }}>
               <Title level={2}>
                 <UserOutlined /> 欢迎回来，{userInfo?.username || '用户'}
               </Title>
+              
+              {/* 显示当前页面信息 */}
+              <div style={{ textAlign: 'center', padding: '20px', backgroundColor: '#fff', borderRadius: '8px', boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}>
+                <Paragraph>当前页面: {activePage}</Paragraph>
+                {!menuLoading && menuItems.length === 0 && (
+                  <Paragraph type="warning">暂无可用菜单权限</Paragraph>
+                )}
+              </div>
               
               {/* 旋转地球效果 */}
               <div className="earth-container">

@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.logindemo.mapper.MenuMapper">
+    
+    <select id="selectMenusByRoleIds" resultType="com.logindemo.model.Menu">
+        SELECT DISTINCT m.id, m.parent_id, m.name, m.`key`, m.path, m.component, m.icon, m.sort_order, m.visible FROM menus m
+        INNER JOIN role_menus rm ON m.id = rm.menu_id
+        WHERE rm.role_id IN
+        <foreach collection="roleIds" item="roleId" open="(" close=")" separator=",">
+            #{roleId}
+        </foreach>
+        AND m.visible = 1
+        ORDER BY m.sort_order ASC, m.id ASC
+    </select>
+    
+    <select id="selectTopMenus" resultType="com.logindemo.model.Menu">
+        SELECT id, parent_id, name, `key`, path, component, icon, sort_order, visible
+        FROM menus
+        WHERE parent_id = 0 AND visible = 1
+        ORDER BY sort_order ASC, id ASC
+    </select>
+    
+    <select id="selectChildrenByParentId" resultType="com.logindemo.model.Menu">
+        SELECT id, parent_id, name, `key`, path, component, icon, sort_order, visible
+        FROM menus
+        WHERE parent_id = #{parentId} AND visible = 1
+        ORDER BY sort_order ASC, id ASC
+    </select>
+</mapper>

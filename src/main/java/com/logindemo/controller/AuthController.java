@@ -1,17 +1,22 @@
 package com.logindemo.controller;
 
+import com.logindemo.model.Menu;
 import com.logindemo.model.dto.ApiResponse;
 import com.logindemo.model.dto.AuthResponse;
 import com.logindemo.model.dto.LoginRequest;
 import com.logindemo.model.dto.RegisterRequest;
+import com.logindemo.service.MenuService;
 import com.logindemo.service.UserService;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import io.swagger.v3.oas.annotations.Operation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import javax.validation.Valid;
+import java.util.List;
 
 /**
  * 认证控制器
@@ -25,6 +30,9 @@ public class AuthController {
 
     @Autowired
     private UserService userService;
+    
+    @Autowired
+    private MenuService menuService;
 
     /**
      * 用户注册
@@ -51,6 +59,21 @@ public class AuthController {
     public ApiResponse<AuthResponse> login(@Valid @RequestBody LoginRequest request) {
         AuthResponse response = userService.login(request);
         return ApiResponse.success(response);
+    }
+    
+    /**
+     * 获取当前登录用户的菜单
+     */
+    @GetMapping("/user-menu")
+    @Operation(summary = "获取当前用户的菜单")
+    public ApiResponse<List<Menu>> getUserMenu() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication != null && authentication.isAuthenticated()) {
+            String username = authentication.getName();
+            List<Menu> menus = userService.getUserMenus(username);
+            return ApiResponse.success(menus);
+        }
+        return ApiResponse.success(null);
     }
 
     /**

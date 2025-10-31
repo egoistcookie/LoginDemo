@@ -11,8 +11,19 @@ const LoginPage = ({ setIsAuthenticated }) => {
   const navigate = useNavigate();
   const [form] = Form.useForm();
 
-  // 自动登录功能 - 在页面加载时自动尝试登录
+  // 自动登录功能 - 只在页面刷新时触发，不在用户主动登出后触发
   useEffect(() => {
+    // 检查是否是用户主动登出
+    const isUserInitiatedLogout = sessionStorage.getItem('userInitiatedLogout') === 'true';
+    
+    // 如果是用户主动登出，清除标志但不执行自动登录
+    if (isUserInitiatedLogout) {
+      // 清除登出标志，以便下次页面刷新时可以正常自动登录
+      sessionStorage.removeItem('userInitiatedLogout');
+      return; // 直接返回，不执行自动登录
+    }
+    
+    // 如果不是用户主动登出，执行自动登录
     // 默认的测试账号
     const defaultCredentials = {
       username: '1111',
