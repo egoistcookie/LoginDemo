@@ -1,29 +1,26 @@
 package com.logindemo.model;
 
 import com.baomidou.mybatisplus.annotation.IdType;
-import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
-import com.baomidou.mybatisplus.annotation.FieldFill;
 import lombok.Data;
 import java.io.Serializable;
 import java.time.LocalDateTime;
 
 /**
- * 角色实体类 - 预留扩展
+ * 用户角色关联实体类
  */
 @Data
-@TableName("roles")
-public class Role implements Serializable {
+@TableName("user_roles")
+public class UserRole implements Serializable {
     private static final long serialVersionUID = 1L;
 
     @TableId(type = IdType.AUTO)
     private Long id;
     
-    private String name;
+    private Long userId;
     
-    private String description;
+    private Long roleId;
     
-    @TableField(fill = FieldFill.INSERT)
     private LocalDateTime createdAt;
 }

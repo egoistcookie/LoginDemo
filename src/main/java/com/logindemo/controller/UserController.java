@@ -4,6 +4,8 @@ import com.logindemo.model.User;
 import com.logindemo.model.dto.ApiResponse;
 import com.logindemo.model.dto.AuthResponse;
 import com.logindemo.service.UserService;
+import com.logindemo.service.RoleService;
+import com.logindemo.service.UserRoleService;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import io.swagger.v3.oas.annotations.Operation;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -11,6 +13,9 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import javax.validation.Valid;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * 用户控制器
@@ -22,6 +27,12 @@ public class UserController {
 
     @Autowired
     private UserService userService;
+    
+    @Autowired
+    private RoleService roleService;
+    
+    @Autowired
+    private UserRoleService userRoleService;
 
     /**
      * 获取当前登录用户信息
@@ -52,7 +63,17 @@ public class UserController {
     @GetMapping
     @Operation(summary = "获取所有用户列表")
     public ApiResponse<?> getAllUsers() {
-        return ApiResponse.success(userService.getAllUsers());
+        List<User> users = userService.getAllUsers();
+        
+        // 为每个用户添加角色信息
+        List<Map<String, Object>> result = users.stream().map(user -> {
+            Map<String, Object> userMap = userService.convertUserToMap(user);
+            List<Long> roleIds = userRoleService.getRoleIdsByUserId(user.getId());
+            userMap.put("roleIds", roleIds);
+            return userMap;
+        }).collect(Collectors.toList());
+        
+        return ApiResponse.success(result);
     }
     
     /**
@@ -84,5 +105,40 @@ public class UserController {
     public ApiResponse<?> deleteUser(@PathVariable Long id) {
         userService.deleteUser(id);
         return ApiResponse.success();
+    }
+    
+    /**
+     * 获取用户的角色ID列表
+     */
+    @GetMapping("/{userId}/roles")
+    @Operation(summary = "获取用户的角色ID列表")
+    public ApiResponse<List<Long>> getUserRoles(@PathVariable Long userId) {
+        List<Long> roleIds = userRoleService.getRoleIdsByUserId(userId);
+        return ApiResponse.success(roleIds);
+    }
+    
+    /**
+     * 为用户分配角色
+     */
+    @PostMapping("/{userId}/roles")
+    @Operation(summary = "为用户分配角色")
+    public ApiResponse<Boolean> assignRolesToUser(
+            @PathVariable Long userId,
+            @RequestBody RoleAssignmentRequest request) {
+        boolean success = userRoleService.assignRolesToUser(userId, request.getRoleIds());
+        return ApiResponse.success(success);
+    }
+    
+    // 内部类，用于接收角色分配请求
+    public static class RoleAssignmentRequest {
+        private List<Long> roleIds;
+        
+        public List<Long> getRoleIds() {
+            return roleIds;
+        }
+        
+        public void setRoleIds(List<Long> roleIds) {
+            this.roleIds = roleIds;
+        }
     }
 }

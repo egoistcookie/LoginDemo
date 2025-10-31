@@ -3,6 +3,7 @@ import { Layout, Typography, Button, message, Menu } from 'antd';
 import { LogoutOutlined, UserOutlined, HomeOutlined, UserAddOutlined, UnorderedListOutlined, SettingOutlined } from '@ant-design/icons';
 import axios from 'axios';
 import UsersListPage from './UsersListPage';
+import RolesListPage from './RolesListPage';
 
 const { Header, Content, Sider } = Layout;
 const { Title, Paragraph } = Typography;
@@ -171,6 +172,8 @@ const MainPage = ({ setIsAuthenticated }) => {
         <Content className="content">
           {activePage === 'users-list' ? (
             <UsersListPage />
+          ) : activePage === 'roles-list' ? (
+            <RolesListPage />
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '30px' }}>
               <Title level={2}>

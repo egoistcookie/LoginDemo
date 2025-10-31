@@ -5,6 +5,8 @@ import com.logindemo.model.dto.AuthResponse;
 import com.logindemo.model.dto.LoginRequest;
 import com.logindemo.model.dto.RegisterRequest;
 import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * 用户服务接口
@@ -65,4 +67,9 @@ public interface UserService {
      * 删除用户
      */
     boolean deleteUser(Long id);
+    
+    /**
+     * 将User对象转换为Map
+     */
+    Map<String, Object> convertUserToMap(User user);
 }

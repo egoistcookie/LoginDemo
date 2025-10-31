@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Table, Button, message, Typography, Row, Col, Input, Tag, Modal, Form, Select } from 'antd';
-import { SearchOutlined, UserAddOutlined, EditOutlined, DeleteOutlined, ReloadOutlined } from '@ant-design/icons';
+import { SearchOutlined, UserAddOutlined, EditOutlined, DeleteOutlined, ReloadOutlined, TeamOutlined } from '@ant-design/icons';
 import axios from 'axios';
 
 const { Title, Text } = Typography;
@@ -9,10 +9,13 @@ const { Search } = Input;
 const UsersListPage = () => {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [roles, setRoles] = useState([]);
   const [currentUser, setCurrentUser] = useState(null);
   const [isEditModalVisible, setIsEditModalVisible] = useState(false);
   const [isAddModalVisible, setIsAddModalVisible] = useState(false);
+  const [isRoleModalVisible, setIsRoleModalVisible] = useState(false);
   const [form] = Form.useForm();
+  const [roleForm] = Form.useForm();
   const [searchText, setSearchText] = useState('');
   const [filteredUsers, setFilteredUsers] = useState([]);
 
@@ -38,8 +41,47 @@ const UsersListPage = () => {
     }
   };
 
+  // 获取角色列表
+  const fetchRoles = async () => {
+    try {
+      const token = localStorage.getItem('accessToken');
+      const response = await axios.get('/roles', {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      if (response.data.code === 200) {
+        setRoles(response.data.data);
+      } else {
+        message.error(response.data.message || '获取角色列表失败');
+      }
+    } catch (error) {
+      message.error('获取角色列表失败：' + error.message);
+    }
+  };
+
+  // 获取用户角色
+  const fetchUserRoles = async (userId) => {
+    try {
+      const token = localStorage.getItem('accessToken');
+      const response = await axios.get(`/users/${userId}/roles`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      if (response.data.code === 200) {
+        return response.data.data || [];
+      } else {
+        message.error(response.data.message || '获取用户角色失败');
+        return [];
+      }
+    } catch (error) {
+      message.error('获取用户角色失败：' + error.message);
+      return [];
+    }
+  };
+
   useEffect(() => {
     fetchUsers();
+    fetchRoles();
   }, []);
 
   // 搜索过滤
@@ -131,6 +173,36 @@ const UsersListPage = () => {
     }
   };
 
+  // 配置用户角色
+  const handleConfigureRoles = async (user) => {
+    setCurrentUser(user);
+    // 获取用户当前角色
+    const userRoleIds = await fetchUserRoles(user.id);
+    roleForm.setFieldsValue({ roleIds: userRoleIds });
+    setIsRoleModalVisible(true);
+  };
+
+  // 保存用户角色配置
+  const handleRoleSave = async (values) => {
+    try {
+      const token = localStorage.getItem('accessToken');
+      const response = await axios.post(`/users/${currentUser.id}/roles`, values, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      if (response.data.code === 200) {
+        message.success('角色配置成功');
+        setIsRoleModalVisible(false);
+        fetchUsers(); // 刷新用户列表以更新角色信息
+      } else {
+        message.error(response.data.message || '角色配置失败');
+      }
+    } catch (error) {
+      const errorMsg = error.response?.data?.message || error.message || '角色配置失败：未知错误';
+      message.error(errorMsg);
+    }
+  };
+
   // 删除用户
   const handleDelete = async (id) => {
     Modal.confirm({
@@ -196,10 +268,21 @@ const UsersListPage = () => {
         return isNaN(date.getTime()) ? '-' : date.toLocaleString();
       },
     },
-    {
-      title: '操作',
+    {      title: '角色',
+      key: 'roles',
+      render: (_, record) => {
+        if (!record.roleIds || record.roleIds.length === 0) {
+          return <Text type="secondary">未配置</Text>;
+        }
+        return record.roleIds.map(roleId => {
+          const role = roles.find(r => r.id === roleId);
+          return role ? <Tag key={roleId} color="blue">{role.name}</Tag> : null;
+        });
+      },
+    },
+    {      title: '操作',
       key: 'action',
-      width: 150,
+      width: 220,
       render: (_, record) => (
         <>
           <Button 
@@ -209,6 +292,14 @@ const UsersListPage = () => {
             size="small"
           >
             编辑
+          </Button>
+          <Button 
+            type="link" 
+            icon={<TeamOutlined />} 
+            onClick={() => handleConfigureRoles(record)}
+            size="small"
+          >
+            配置角色
           </Button>
           <Button 
             type="link" 
@@ -382,6 +473,40 @@ const UsersListPage = () => {
             </Button>
             <Button type="primary" htmlType="submit">
               添加
+            </Button>
+          </Form.Item>
+        </Form>
+      </Modal>
+
+      {/* 角色配置弹窗 */}
+      <Modal
+        title="配置用户角色"
+        open={isRoleModalVisible}
+        onCancel={() => setIsRoleModalVisible(false)}
+        footer={null}
+      >
+        <Form
+          form={roleForm}
+          layout="vertical"
+          onFinish={handleRoleSave}
+        >
+          <Form.Item
+            name="roleIds"
+            label="选择角色"
+            rules={[{ required: true, message: '请至少选择一个角色' }]}
+          >
+            <Select mode="multiple" placeholder="请选择角色">
+              {roles.map(role => (
+                <Select.Option key={role.id} value={role.id}>{role.name}</Select.Option>
+              ))}
+            </Select>
+          </Form.Item>
+          <Form.Item style={{ textAlign: 'right' }}>
+            <Button onClick={() => setIsRoleModalVisible(false)} style={{ marginRight: 8 }}>
+              取消
+            </Button>
+            <Button type="primary" htmlType="submit">
+              保存
             </Button>
           </Form.Item>
         </Form>

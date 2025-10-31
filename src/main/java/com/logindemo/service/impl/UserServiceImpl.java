@@ -18,7 +18,9 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 
 /**
@@ -391,5 +393,18 @@ public class UserServiceImpl implements UserService {
             redisUtils.delete(LOGIN_ATTEMPT_PREFIX + username);
             throw new BusinessException("登录失败次数过多，账户已被锁定" + lockDuration + "秒");
         }
+    }
+    
+    @Override
+    public Map<String, Object> convertUserToMap(User user) {
+        Map<String, Object> map = new HashMap<>();
+        map.put("id", user.getId());
+        map.put("username", user.getUsername());
+        map.put("email", user.getEmail());
+        map.put("phone", user.getPhone());
+        map.put("status", user.getStatus());
+        map.put("createdAt", user.getCreatedAt());
+        map.put("updatedAt", user.getUpdatedAt());
+        return map;
     }
 }
