@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { Form, Input, Button, Checkbox, message, Typography, Card, Tabs, Spin } from 'antd';
-import { UserOutlined, LockOutlined, MobileOutlined, WechatOutlined, ReloadOutlined } from '@ant-design/icons';
+import { Form, Input, Button, Checkbox, message, Typography, Card, Tabs, Spin, Space } from 'antd';
+import { UserOutlined, LockOutlined, MobileOutlined, WechatOutlined, ReloadOutlined, BulbOutlined, BulbFilled } from '@ant-design/icons';
+import { useTheme } from '../context/ThemeContext';
 import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 
@@ -8,6 +9,7 @@ const { Title } = Typography;
 const { TabPane } = Tabs;
 
 const LoginPage = ({ setIsAuthenticated }) => {
+  const { theme, toggleTheme } = useTheme();
   const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState('password');
   const [smsLoading, setSmsLoading] = useState(false);
@@ -368,7 +370,15 @@ const LoginPage = ({ setIsAuthenticated }) => {
 
   return (
     <div className="login-container">
-      <Card className="login-form">
+      <Card className="login-form" style={{ position: 'relative' }}>
+        <div style={{ position: 'absolute', top: '16px', right: '16px', zIndex: 10 }}>
+          <Button
+            type="text"
+            icon={theme === 'dark' ? <BulbFilled /> : <BulbOutlined />}
+            onClick={toggleTheme}
+            title={theme === 'dark' ? '切换到浅色模式' : '切换到暗黑模式'}
+          />
+        </div>
         <Title level={2} className="login-form-title">用户登录</Title>
         <Tabs activeKey={activeTab} onChange={handleTabChange} centered>
           {/* 账号密码登录 */}
@@ -487,7 +497,11 @@ const LoginPage = ({ setIsAuthenticated }) => {
                   登录
                 </Button>
                 <div style={{ marginTop: 16, textAlign: 'center' }}>
-                  还没有账号？ <Link to="/register">立即注册</Link>
+                  <Space>
+                    <Link to="/forgot-password">忘记密码？</Link>
+                    <span>|</span>
+                    <Link to="/register">注册账号</Link>
+                  </Space>
                 </div>
               </Form.Item>
             </Form>
@@ -553,7 +567,11 @@ const LoginPage = ({ setIsAuthenticated }) => {
                   登录
                 </Button>
                 <div style={{ marginTop: 16, textAlign: 'center' }}>
-                  还没有账号？ <Link to="/register">立即注册</Link>
+                  <Space>
+                    <Link to="/forgot-password">忘记密码？</Link>
+                    <span>|</span>
+                    <Link to="/register">注册账号</Link>
+                  </Space>
                 </div>
               </Form.Item>
             </Form>

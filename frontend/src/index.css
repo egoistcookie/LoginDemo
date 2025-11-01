@@ -237,3 +237,462 @@ code {
   padding: 24px;
   min-height: 280px;
 }
+
+/* 暗黑模式样式 */
+.dark-theme {
+  --bg-color: #141414;
+  --bg-secondary: #1f1f1f;
+  --bg-tertiary: #262626;
+  --text-color: #ffffff;
+  --text-secondary: rgba(255, 255, 255, 0.85);
+  --border-color: #434343;
+}
+
+.dark-theme body {
+  background-color: var(--bg-color);
+  color: var(--text-color);
+}
+
+.dark-theme .login-container {
+  background-color: var(--bg-color);
+}
+
+.dark-theme .login-form {
+  background: var(--bg-secondary);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.dark-theme .login-form-title {
+  color: var(--text-color);
+}
+
+.dark-theme .register-container {
+  background-color: var(--bg-color);
+}
+
+.dark-theme .register-form {
+  background: var(--bg-secondary);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.dark-theme .register-form-title {
+  color: var(--text-color);
+}
+
+.dark-theme .main-container {
+  background-color: var(--bg-color);
+  color: var(--text-color);
+}
+
+/* Ant Design Layout 暗黑模式 */
+.dark-theme .ant-layout {
+  background: var(--bg-color) !important;
+}
+
+.dark-theme .ant-layout-header,
+.dark-theme .header {
+  background: var(--bg-secondary) !important;
+  border-bottom: 1px solid var(--border-color) !important;
+}
+
+.dark-theme .ant-layout-content,
+.dark-theme .content {
+  background: var(--bg-color) !important;
+  color: var(--text-color) !important;
+}
+
+.dark-theme .ant-layout-sider {
+  background: var(--bg-secondary) !important;
+}
+
+.dark-theme .main-container,
+.dark-theme .main-container .content {
+  background-color: var(--bg-color) !important;
+}
+
+/* 确保Layout之间没有白色分割线 */
+.dark-theme .ant-layout-has-sider > .ant-layout,
+.dark-theme .ant-layout-has-sider > .ant-layout-content {
+  background: var(--bg-color) !important;
+}
+
+.dark-theme .current-page-info {
+  background: var(--bg-secondary);
+  color: var(--text-color);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+/* Ant Design组件暗黑模式适配 */
+.dark-theme .ant-card {
+  background: var(--bg-secondary);
+  border-color: var(--border-color);
+}
+
+.dark-theme .ant-card-body {
+  color: var(--text-color);
+}
+
+.dark-theme .ant-input,
+.dark-theme .ant-input-affix-wrapper {
+  background: var(--bg-tertiary);
+  border-color: var(--border-color);
+  color: var(--text-color);
+}
+
+.dark-theme .ant-input::placeholder,
+.dark-theme .ant-input-affix-wrapper .ant-input::placeholder {
+  color: var(--text-secondary);
+}
+
+.dark-theme .ant-input:focus,
+.dark-theme .ant-input-affix-wrapper:focus-within {
+  border-color: #40a9ff;
+}
+
+.dark-theme .ant-btn {
+  border-color: var(--border-color);
+}
+
+.dark-theme .ant-btn-default {
+  background: var(--bg-tertiary);
+  color: var(--text-color);
+  border-color: var(--border-color);
+}
+
+.dark-theme .ant-checkbox-wrapper {
+  color: var(--text-color);
+}
+
+.dark-theme .ant-typography {
+  color: var(--text-color);
+}
+
+.dark-theme .ant-typography h2 {
+  color: var(--text-color);
+}
+
+.dark-theme .ant-tabs-tab {
+  color: var(--text-secondary);
+}
+
+.dark-theme .ant-tabs-tab-active {
+  color: var(--text-color);
+}
+
+.dark-theme .ant-tabs-ink-bar {
+  background: #40a9ff;
+}
+
+/* 表格暗黑模式 */
+.dark-theme .ant-table-wrapper {
+  color: var(--text-color);
+}
+
+.dark-theme .ant-table {
+  background: var(--bg-secondary) !important;
+  color: var(--text-color) !important;
+  border: 1px solid var(--border-color) !important;
+}
+
+.dark-theme .ant-table-container {
+  border: 1px solid var(--border-color) !important;
+  border-top: none !important;
+  background: var(--bg-secondary) !important;
+}
+
+.dark-theme .ant-table-content {
+  background: var(--bg-secondary) !important;
+}
+
+.dark-theme .ant-table-thead > tr > th {
+  background: var(--bg-tertiary) !important;
+  border-bottom: 1px solid var(--border-color) !important;
+  border-right: 1px solid var(--border-color) !important;
+  color: var(--text-color) !important;
+}
+
+.dark-theme .ant-table-thead > tr > th:last-child {
+  border-right: none !important;
+}
+
+.dark-theme .ant-table-thead > tr:first-child > th:first-child {
+  border-top-left-radius: 0;
+}
+
+.dark-theme .ant-table-thead > tr:first-child > th:last-child {
+  border-top-right-radius: 0;
+}
+
+.dark-theme .ant-table-tbody > tr > td {
+  border-bottom: 1px solid var(--border-color) !important;
+  border-right: 1px solid var(--border-color) !important;
+  color: var(--text-color) !important;
+  background: var(--bg-secondary) !important;
+}
+
+.dark-theme .ant-table-tbody > tr > td:last-child {
+  border-right: none !important;
+}
+
+.dark-theme .ant-table-tbody > tr:last-child > td {
+  border-bottom: none !important;
+}
+
+.dark-theme .ant-table-tbody > tr {
+  background: var(--bg-secondary) !important;
+}
+
+.dark-theme .ant-table-tbody > tr:hover {
+  background: rgba(64, 169, 255, 0.08) !important;
+}
+
+.dark-theme .ant-table-tbody > tr:hover > td {
+  background: rgba(64, 169, 255, 0.08) !important;
+  color: var(--text-color) !important;
+  border-bottom-color: var(--border-color) !important;
+  border-right-color: var(--border-color) !important;
+}
+
+.dark-theme .ant-table-tbody > tr.ant-table-row-selected > td {
+  background: rgba(64, 169, 255, 0.15) !important;
+  color: var(--text-color) !important;
+}
+
+.dark-theme .ant-table-tbody > tr.ant-table-row-selected:hover > td {
+  background: rgba(64, 169, 255, 0.2) !important;
+  color: var(--text-color) !important;
+}
+
+.dark-theme .ant-table-pagination {
+  color: var(--text-color);
+}
+
+.dark-theme .ant-pagination-item {
+  background: var(--bg-tertiary);
+  border-color: var(--border-color);
+}
+
+.dark-theme .ant-pagination-item a {
+  color: var(--text-color);
+}
+
+.dark-theme .ant-pagination-item-active {
+  background: #40a9ff;
+  border-color: #40a9ff;
+}
+
+.dark-theme .ant-pagination-item-active a {
+  color: #fff;
+}
+
+.dark-theme .ant-pagination-prev .ant-pagination-item-link,
+.dark-theme .ant-pagination-next .ant-pagination-item-link {
+  background: var(--bg-tertiary);
+  border-color: var(--border-color);
+  color: var(--text-color);
+}
+
+.dark-theme .ant-pagination-options .ant-select-selector {
+  background: var(--bg-tertiary);
+  border-color: var(--border-color);
+  color: var(--text-color);
+}
+
+/* 菜单滑块暗黑模式 */
+.dark-theme .ant-menu {
+  background: var(--bg-secondary);
+  color: var(--text-color);
+}
+
+.dark-theme .ant-menu-item {
+  color: var(--text-secondary);
+}
+
+.dark-theme .ant-menu-item:hover {
+  background-color: rgba(64, 169, 255, 0.1) !important;
+  color: var(--text-color);
+}
+
+.dark-theme .ant-menu-item-selected {
+  background-color: rgba(64, 169, 255, 0.15) !important;
+  color: var(--text-color);
+}
+
+.dark-theme .ant-menu-item-selected::after {
+  border-right-color: #40a9ff !important;
+}
+
+.dark-theme .ant-menu-inline .ant-menu-item::after {
+  border-right-color: #40a9ff;
+}
+
+.dark-theme .ant-menu-submenu-title {
+  color: var(--text-secondary);
+}
+
+.dark-theme .ant-menu-submenu-title:hover {
+  background-color: rgba(64, 169, 255, 0.1) !important;
+  color: var(--text-color);
+}
+
+.dark-theme .ant-menu-submenu-open > .ant-menu-submenu-title {
+  color: var(--text-color);
+}
+
+.dark-theme .ant-menu-submenu .ant-menu {
+  background: var(--bg-tertiary);
+}
+
+/* Modal暗黑模式 */
+.dark-theme .ant-modal-content {
+  background: var(--bg-secondary);
+}
+
+.dark-theme .ant-modal-header {
+  background: var(--bg-secondary);
+  border-bottom-color: var(--border-color);
+}
+
+.dark-theme .ant-modal-title {
+  color: var(--text-color);
+}
+
+.dark-theme .ant-modal-body {
+  background: var(--bg-secondary);
+  color: var(--text-color);
+}
+
+.dark-theme .ant-modal-footer {
+  background: var(--bg-secondary);
+  border-top-color: var(--border-color);
+}
+
+/* Form暗黑模式 */
+.dark-theme .ant-form-item-label > label {
+  color: var(--text-color);
+}
+
+/* Select暗黑模式 */
+.dark-theme .ant-select-selector {
+  background: var(--bg-tertiary) !important;
+  border-color: var(--border-color) !important;
+  color: var(--text-color) !important;
+}
+
+.dark-theme .ant-select-selection-placeholder {
+  color: var(--text-secondary);
+}
+
+.dark-theme .ant-select-dropdown {
+  background: var(--bg-secondary);
+  border-color: var(--border-color);
+}
+
+.dark-theme .ant-select-item {
+  color: var(--text-color);
+}
+
+.dark-theme .ant-select-item-option-selected {
+  background: var(--bg-tertiary);
+}
+
+/* Tag暗黑模式 */
+.dark-theme .ant-tag {
+  background: var(--bg-tertiary) !important;
+  border-color: var(--border-color) !important;
+  color: var(--text-color) !important;
+}
+
+/* 带颜色的Tag在暗黑模式下的文字颜色 */
+.dark-theme .ant-tag.ant-tag-blue,
+.dark-theme .ant-tag.ant-tag-cyan,
+.dark-theme .ant-tag.ant-tag-geekblue {
+  background: rgba(64, 169, 255, 0.2) !important;
+  border-color: #40a9ff !important;
+  color: #69c0ff !important;
+}
+
+.dark-theme .ant-tag.ant-tag-green,
+.dark-theme .ant-tag.ant-tag-lime {
+  background: rgba(82, 196, 26, 0.2) !important;
+  border-color: #52c41a !important;
+  color: #73d13d !important;
+}
+
+.dark-theme .ant-tag.ant-tag-red,
+.dark-theme .ant-tag.ant-tag-volcano,
+.dark-theme .ant-tag.ant-tag-magenta {
+  background: rgba(255, 77, 79, 0.2) !important;
+  border-color: #ff4d4f !important;
+  color: #ff7875 !important;
+}
+
+.dark-theme .ant-tag.ant-tag-orange {
+  background: rgba(255, 122, 69, 0.2) !important;
+  border-color: #ff7a45 !important;
+  color: #ff9c6e !important;
+}
+
+.dark-theme .ant-tag.ant-tag-gold {
+  background: rgba(250, 173, 20, 0.2) !important;
+  border-color: #faad14 !important;
+  color: #ffc53d !important;
+}
+
+.dark-theme .ant-tag.ant-tag-purple {
+  background: rgba(135, 92, 246, 0.2) !important;
+  border-color: #8758f6 !important;
+  color: #b37feb !important;
+}
+
+/* Tag 内的文字和图标 */
+.dark-theme .ant-tag .anticon,
+.dark-theme .ant-tag span {
+  color: inherit !important;
+}
+
+/* Search Input暗黑模式 */
+.dark-theme .ant-input-search .ant-input {
+  background: var(--bg-tertiary);
+  border-color: var(--border-color);
+  color: var(--text-color);
+}
+
+.dark-theme .ant-input-search-button {
+  background: var(--bg-tertiary);
+  border-color: var(--border-color);
+  color: var(--text-color);
+}
+
+/* Row/Col暗黑模式 */
+.dark-theme .users-list-container,
+.dark-theme .roles-list-page,
+.dark-theme .roles-list-container {
+  background: var(--bg-secondary) !important;
+  color: var(--text-color);
+  border-color: var(--border-color);
+}
+
+/* 表格单元格内容确保可见 */
+.dark-theme .ant-table-tbody > tr > td a,
+.dark-theme .ant-table-tbody > tr > td span,
+.dark-theme .ant-table-tbody > tr > td div,
+.dark-theme .ant-table-tbody > tr:hover > td a,
+.dark-theme .ant-table-tbody > tr:hover > td span,
+.dark-theme .ant-table-tbody > tr:hover > td div {
+  color: var(--text-color) !important;
+}
+
+/* 表格中的按钮在暗黑模式下 */
+.dark-theme .ant-table-tbody > tr > td .ant-btn-link {
+  color: #40a9ff !important;
+}
+
+.dark-theme .ant-table-tbody > tr > td .ant-btn-link:hover {
+  color: #69c0ff !important;
+}
+
+/* Title暗黑模式 */
+.dark-theme .ant-typography h4 {
+  color: var(--text-color);
+}
