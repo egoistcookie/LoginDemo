@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Table, Button, message, Typography, Form, Select, DatePicker, Input, Space } from 'antd';
 import { ReloadOutlined, SearchOutlined } from '@ant-design/icons';
 import { useTheme } from '../context/ThemeContext';
@@ -39,7 +39,7 @@ const AuditLogPage = () => {
   }, []);
 
   // 查询审计日志
-  const fetchAuditLogs = async (params = {}) => {
+  const fetchAuditLogs = useCallback(async (params = {}) => {
     setLoading(true);
     try {
       const token = localStorage.getItem('accessToken');
@@ -82,12 +82,12 @@ const AuditLogPage = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [form, pagination]);
 
   // 初始加载
   useEffect(() => {
     fetchAuditLogs();
-  }, [pagination.current, pagination.pageSize]);
+  }, [fetchAuditLogs]);
 
   // 处理搜索
   const handleSearch = () => {
