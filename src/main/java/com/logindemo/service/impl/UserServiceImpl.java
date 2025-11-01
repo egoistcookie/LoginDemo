@@ -425,4 +425,36 @@ public class UserServiceImpl implements UserService {
         // 根据角色ID列表获取菜单树
         return menuService.getUserMenuTree(roleIds);
     }
+    
+    @Override
+    public boolean updatePassword(Long userId, String newPassword) {
+        logger.info("更新用户密码，用户ID: {}", userId);
+        try {
+            // 检查用户是否存在
+            User existingUser = userMapper.selectById(userId);
+            if (Objects.isNull(existingUser)) {
+                logger.warn("用户不存在，ID: {}", userId);
+                throw new BusinessException("用户不存在");
+            }
+            
+            // 对新密码进行加密
+            String encodedPassword = passwordUtils.encode(newPassword);
+            
+            // 创建更新对象
+            User updateUser = new User();
+            updateUser.setId(userId);
+            updateUser.setPassword(encodedPassword);
+            updateUser.setUpdatedAt(LocalDateTime.now());
+            
+            // 更新密码
+            int result = userMapper.updateById(updateUser);
+            logger.info("用户密码更新成功，ID: {}", userId);
+            return result > 0;
+        } catch (BusinessException e) {
+            throw e;
+        } catch (Exception e) {
+            logger.error("更新用户密码失败，ID: {}", userId, e);
+            throw new BusinessException("更新密码失败");
+        }
+    }
 }

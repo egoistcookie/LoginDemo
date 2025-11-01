@@ -106,6 +106,20 @@ public class UserController {
     }
     
     /**
+     * 更新用户密码
+     */
+    @PutMapping("/{id}/password")
+    @Operation(summary = "更新用户密码")
+    public ApiResponse<?> updatePassword(@PathVariable Long id, @RequestBody Map<String, String> request) {
+        String newPassword = request.get("newPassword");
+        if (newPassword == null || newPassword.isEmpty()) {
+            return ApiResponse.error(400, "新密码不能为空");
+        }
+        userService.updatePassword(id, newPassword);
+        return ApiResponse.success();
+    }
+    
+    /**
      * 获取用户的角色ID列表
      */
     @GetMapping("/{userId}/roles")

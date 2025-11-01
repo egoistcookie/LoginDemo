@@ -14,8 +14,10 @@ const UsersListPage = () => {
   const [isEditModalVisible, setIsEditModalVisible] = useState(false);
   const [isAddModalVisible, setIsAddModalVisible] = useState(false);
   const [isRoleModalVisible, setIsRoleModalVisible] = useState(false);
+  const [isPasswordModalVisible, setIsPasswordModalVisible] = useState(false);
   const [form] = Form.useForm();
   const [roleForm] = Form.useForm();
+  const [passwordForm] = Form.useForm();
   const [searchText, setSearchText] = useState('');
   const [filteredUsers, setFilteredUsers] = useState([]);
 
@@ -202,6 +204,35 @@ const UsersListPage = () => {
       message.error(errorMsg);
     }
   };
+  
+  // 打开设置密码弹窗
+  const handleSetPassword = (user) => {
+    setCurrentUser(user);
+    passwordForm.resetFields();
+    setIsPasswordModalVisible(true);
+  };
+  
+  // 保存密码
+  const handlePasswordSave = async (values) => {
+    try {
+      const token = localStorage.getItem('accessToken');
+      const response = await axios.put(`/users/${currentUser.id}/password`, {
+        newPassword: values.newPassword
+      }, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      if (response.data.code === 200) {
+        message.success('密码设置成功');
+        setIsPasswordModalVisible(false);
+      } else {
+        message.error(response.data.message || '密码设置失败');
+      }
+    } catch (error) {
+      const errorMsg = error.response?.data?.message || error.message || '密码设置失败：未知错误';
+      message.error(errorMsg);
+    }
+  };
 
   // 删除用户
   const handleDelete = async (id) => {
@@ -309,6 +340,14 @@ const UsersListPage = () => {
             size="small"
           >
             删除
+          </Button>
+          <Button 
+            type="link" 
+            icon={<EditOutlined />} 
+            onClick={() => handleSetPassword(record)}
+            size="small"
+          >
+            设置密码
           </Button>
         </>
       ),
@@ -513,7 +552,69 @@ const UsersListPage = () => {
       </Modal>
 
       <style>
+
         {`
+        .users-list-container {
+          padding: 24px;
+          background: #fff;
+          border-radius: 8px;
+          box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+        `}
+      {/* 设置密码弹窗 */}
+        </style>
+      <Modal
+        title="设置用户密码"
+        open={isPasswordModalVisible}
+        onCancel={() => setIsPasswordModalVisible(false)}
+        footer={null}
+      >
+        <Form
+          form={passwordForm}
+          layout="vertical"
+          onFinish={handlePasswordSave}
+        >
+          <Form.Item
+            name="newPassword"
+            label="新密码"
+            rules={[
+              { required: true, message: '请输入新密码' }, 
+              { min: 6, message: '密码至少6个字符' }
+            ]}
+          >
+            <Input.Password placeholder="请输入新密码" />
+          </Form.Item>
+          <Form.Item
+            name="confirmPassword"
+            label="确认新密码"
+            rules={[
+              { required: true, message: '请确认新密码' },
+              ({ getFieldValue }) => ({
+                validator(rule, value) {
+                  if (!value || getFieldValue('newPassword') === value) {
+                    return Promise.resolve();
+                  }
+                  return Promise.reject('两次输入的密码不一致');
+                },
+              }),
+            ]}
+          >
+            <Input.Password placeholder="请再次输入新密码" />
+          </Form.Item>
+          <Form.Item style={{ textAlign: 'right' }}>
+            <Button onClick={() => setIsPasswordModalVisible(false)} style={{ marginRight: 8 }}>
+              取消
+            </Button>
+            <Button type="primary" htmlType="submit">
+              保存
+            </Button>
+          </Form.Item>
+        </Form>
+      </Modal>
+
+      <style>
+        {
+`
         .users-list-container {
           padding: 24px;
           background: #fff;

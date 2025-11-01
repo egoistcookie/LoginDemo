@@ -78,4 +78,9 @@ public interface UserService {
      * 获取用户的菜单列表
      */
     List<Menu> getUserMenus(String username);
+    
+    /**
+     * 更新用户密码
+     */
+    boolean updatePassword(Long userId, String newPassword);
 }
