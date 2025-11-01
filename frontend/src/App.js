@@ -2,7 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
+import ForgotPasswordPage from './pages/ForgotPasswordPage';
 import MainPage from './pages/MainPage';
+import { ThemeProvider } from './context/ThemeContext';
 import axios from 'axios';
 
 // 设置axios基础配置
@@ -70,17 +72,20 @@ function App() {
   };
 
   return (
-    <div className="App">
-      <Routes>
-        <Route path="/login" element={<LoginPage setIsAuthenticated={setIsAuthenticated} />} />
-        <Route path="/register" element={<RegisterPage />} />
-        <Route path="/" element={
-          <ProtectedRoute>
-            <MainPage setIsAuthenticated={setIsAuthenticated} />
-          </ProtectedRoute>
-        } />
-      </Routes>
-    </div>
+    <ThemeProvider>
+      <div className="App">
+        <Routes>
+          <Route path="/login" element={<LoginPage setIsAuthenticated={setIsAuthenticated} />} />
+          <Route path="/register" element={<RegisterPage />} />
+          <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+          <Route path="/" element={
+            <ProtectedRoute>
+              <MainPage setIsAuthenticated={setIsAuthenticated} />
+            </ProtectedRoute>
+          } />
+        </Routes>
+      </div>
+    </ThemeProvider>
   );
 }
 

@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.logindemo.mapper.AuditLogMapper">
+    
+    <select id="selectAuditLogs" resultType="com.logindemo.model.AuditLog">
+        SELECT * FROM audit_logs
+        <where>
+            <if test="userId != null">
+                AND user_id = #{userId}
+            </if>
+            <if test="username != null and username != ''">
+                AND username LIKE CONCAT('%', #{username}, '%')
+            </if>
+            <if test="operationType != null and operationType != ''">
+                AND operation_type = #{operationType}
+            </if>
+            <if test="status != null and status != ''">
+                AND status = #{status}
+            </if>
+            <if test="startTime != null">
+                AND created_at >= #{startTime}
+            </if>
+            <if test="endTime != null">
+                AND created_at &lt;= #{endTime}
+            </if>
+        </where>
+        ORDER BY created_at DESC
+        <if test="offset != null and limit != null">
+            LIMIT #{offset}, #{limit}
+        </if>
+    </select>
+    
+    <select id="countAuditLogs" resultType="Long">
+        SELECT COUNT(*) FROM audit_logs
+        <where>
+            <if test="userId != null">
+                AND user_id = #{userId}
+            </if>
+            <if test="username != null and username != ''">
+                AND username LIKE CONCAT('%', #{username}, '%')
+            </if>
+            <if test="operationType != null and operationType != ''">
+                AND operation_type = #{operationType}
+            </if>
+            <if test="status != null and status != ''">
+                AND status = #{status}
+            </if>
+            <if test="startTime != null">
+                AND created_at >= #{startTime}
+            </if>
+            <if test="endTime != null">
+                AND created_at &lt;= #{endTime}
+            </if>
+        </where>
+    </select>
+</mapper>
+

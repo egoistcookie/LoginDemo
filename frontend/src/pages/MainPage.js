@@ -1,17 +1,20 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Layout, Typography, Button, message, Menu } from 'antd';
+import { Layout, Typography, Button, message, Menu, Space } from 'antd';
 import { LogoutOutlined, UserOutlined, HomeOutlined, UserAddOutlined, UnorderedListOutlined, SettingOutlined, 
          BarChartOutlined, FileTextOutlined, DatabaseOutlined, FileAddOutlined, DownloadOutlined,
-         BookOutlined, InfoCircleOutlined } from '@ant-design/icons';
+         BookOutlined, InfoCircleOutlined, BulbOutlined, BulbFilled, FileSearchOutlined } from '@ant-design/icons';
+import { useTheme } from '../context/ThemeContext';
 import axios from 'axios';
 import UsersListPage from './UsersListPage';
 import RolesListPage from './RolesListPage';
 import MenusListPage from './MenusListPage';
+import AuditLogPage from './AuditLogPage';
 
 const { Header, Content, Sider } = Layout;
 const { Title, Paragraph } = Typography;
 
 const MainPage = ({ setIsAuthenticated }) => {
+  const { theme, toggleTheme } = useTheme();
   const [userInfo, setUserInfo] = useState(null);
   const [loading, setLoading] = useState(false);
   const [collapsed, setCollapsed] = useState(false);
@@ -41,7 +44,8 @@ const MainPage = ({ setIsAuthenticated }) => {
       'more': <SettingOutlined />,
       'settings': <SettingOutlined />,
       'help': <BookOutlined />,
-      'about': <InfoCircleOutlined />
+      'about': <InfoCircleOutlined />,
+      'audit-logs': <FileSearchOutlined />
     };
     return iconMap[menuKey] || <UnorderedListOutlined />;
   }, []);
@@ -147,7 +151,14 @@ const MainPage = ({ setIsAuthenticated }) => {
     <Layout className="main-container">
       <Header className="header">
         <Title level={3} style={{ color: 'white', margin: 0 }}>登录系统</Title>
-        <div>
+        <Space>
+          <Button
+            type="text"
+            icon={theme === 'dark' ? <BulbFilled /> : <BulbOutlined />}
+            onClick={toggleTheme}
+            style={{ color: 'white' }}
+            title={theme === 'dark' ? '切换到浅色模式' : '切换到暗黑模式'}
+          />
           <Button 
             type="primary" 
             danger 
@@ -157,14 +168,14 @@ const MainPage = ({ setIsAuthenticated }) => {
           >
             登出
           </Button>
-        </div>
+        </Space>
       </Header>
       
       <Layout>
         {/* 侧边导航菜单 */}
         <Sider 
           width={250} 
-          theme="light" 
+          theme={theme} 
           className="sider"
           collapsible
           collapsed={collapsed}
@@ -175,7 +186,7 @@ const MainPage = ({ setIsAuthenticated }) => {
           </div>
           <Menu
             mode="inline"
-            theme="light"
+            theme={theme}
             onClick={handleMenuClick}
             style={{ height: '100%', borderRight: 0 }}
             items={menuItems}
@@ -191,6 +202,8 @@ const MainPage = ({ setIsAuthenticated }) => {
             <RolesListPage />
           ) : activePage === 'menus-list' ? (
             <MenusListPage />
+          ) : activePage === 'audit-logs' ? (
+            <AuditLogPage />
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '30px' }}>
               <Title level={2}>
@@ -198,7 +211,7 @@ const MainPage = ({ setIsAuthenticated }) => {
               </Title>
               
               {/* 显示当前页面信息 */}
-              <div style={{ textAlign: 'center', padding: '20px', backgroundColor: '#fff', borderRadius: '8px', boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}>
+              <div className="current-page-info">
                 <Paragraph>当前页面: {activePage}</Paragraph>
                 {!menuLoading && menuItems.length === 0 && (
                   <Paragraph type="warning">暂无可用菜单权限</Paragraph>
@@ -243,6 +256,14 @@ const MainPage = ({ setIsAuthenticated }) => {
           padding: 24px;
           background-color: #f0f2f5;
           min-height: calc(100vh - 64px);
+        }
+
+        .current-page-info {
+          text-align: center;
+          padding: 20px;
+          background-color: #fff;
+          border-radius: 8px;
+          box-shadow: 0 2px 8px rgba(0,0,0,0.1);
         }
         
         .earth-container {

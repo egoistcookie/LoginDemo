@@ -36,8 +36,11 @@ public class SecurityConfig {
                 "/auth/validate",
                 "/auth/send-sms-code",
                 "/auth/login-by-phone",
+                "/auth/send-email-code",
+                "/auth/reset-password",
                 "/auth/wechat/qrcode",
                 "/auth/wechat/status",
+                "/captcha/**",
                 "/swagger-ui/**", 
                 "/v3/api-docs/**"
             ).permitAll()

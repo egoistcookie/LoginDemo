@@ -1,12 +1,14 @@
 import React, { useState } from 'react';
 import { Form, Input, Button, message, Typography, Card } from 'antd';
-import { UserOutlined, LockOutlined, MailOutlined, PhoneOutlined } from '@ant-design/icons';
+import { UserOutlined, LockOutlined, MailOutlined, PhoneOutlined, BulbOutlined, BulbFilled } from '@ant-design/icons';
+import { useTheme } from '../context/ThemeContext';
 import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 
 const { Title } = Typography;
 
 const RegisterPage = () => {
+  const { theme, toggleTheme } = useTheme();
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const [form] = Form.useForm();
@@ -70,7 +72,15 @@ const RegisterPage = () => {
 
   return (
     <div className="register-container">
-      <Card className="register-form">
+      <Card className="register-form" style={{ position: 'relative' }}>
+        <div style={{ position: 'absolute', top: '16px', right: '16px', zIndex: 10 }}>
+          <Button
+            type="text"
+            icon={theme === 'dark' ? <BulbFilled /> : <BulbOutlined />}
+            onClick={toggleTheme}
+            title={theme === 'dark' ? '切换到浅色模式' : '切换到暗黑模式'}
+          />
+        </div>
         <Title level={2} className="register-form-title">用户注册</Title>
         <Form
           form={form}

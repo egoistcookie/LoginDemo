@@ -103,4 +103,14 @@ public interface UserService {
      * 查询微信扫码状态
      */
     com.logindemo.model.dto.WechatStatusResponse getWechatStatus(String ticket);
+    
+    /**
+     * 发送邮箱验证码（用于密码找回）
+     */
+    void sendEmailCode(String email);
+    
+    /**
+     * 通过邮箱或手机号重置密码
+     */
+    void resetPassword(String type, String account, String code, String newPassword);
 }

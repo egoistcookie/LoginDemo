@@ -53,6 +53,11 @@ login:
   max-attempts: 5
   lock-duration: 300
 
+# 验证码配置
+captcha:
+  expire-time: 300  # 验证码过期时间（秒），默认5分钟
+  require-threshold: 2  # 需要验证码的失败次数阈值
+
 # 日志配置
 logging:
   level:

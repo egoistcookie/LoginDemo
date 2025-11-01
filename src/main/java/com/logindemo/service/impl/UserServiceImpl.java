@@ -58,6 +58,15 @@ public class UserServiceImpl implements UserService {
     
     @Autowired
     private ObjectMapper objectMapper;
+    
+    @Autowired
+    private com.logindemo.service.CaptchaService captchaService;
+    
+    @Autowired
+    private com.logindemo.service.AuditLogService auditLogService;
+    
+    @Autowired
+    private com.logindemo.utils.HttpRequestUtils httpRequestUtils;
 
     @Value("${login.max-attempts}")
     private int maxLoginAttempts;
@@ -146,9 +155,21 @@ public class UserServiceImpl implements UserService {
             response.setUser(userInfo);
 
             logger.info("用户注册流程完成，ID: {}", user.getId());
+            
+            // 记录审计日志
+            auditLogService.logSuccess("REGISTER", "用户注册成功", 
+                user.getId(), user.getUsername(), httpRequestUtils.getClientIp(), 
+                httpRequestUtils.getUserAgent(), httpRequestUtils.getRequestMethod(), 
+                httpRequestUtils.getRequestPath());
+            
             return response;
         } catch (BusinessException e) {
             logger.error("注册业务异常: {}", e.getMessage());
+            // 记录失败审计日志
+            auditLogService.logFailure("REGISTER", "用户注册失败", 
+                null, request.getUsername(), httpRequestUtils.getClientIp(), 
+                httpRequestUtils.getUserAgent(), e.getMessage(),
+                httpRequestUtils.getRequestMethod(), httpRequestUtils.getRequestPath());
             throw e;
         } catch (Exception e) {
             logger.error("注册过程中发生系统异常", e);
@@ -163,16 +184,39 @@ public class UserServiceImpl implements UserService {
         // 检查用户是否被锁定
         checkUserLocked(username);
 
+        // 检查是否需要验证码
+        boolean requiresCaptcha = captchaService.requiresCaptcha(username);
+        if (requiresCaptcha) {
+            // 如果需要验证码，验证验证码
+            if (request.getCaptchaKey() == null || request.getCaptchaCode() == null) {
+                throw new BusinessException("请输入验证码");
+            }
+            if (!captchaService.validateCaptcha(request.getCaptchaKey(), request.getCaptchaCode())) {
+                // 验证码错误，记录失败次数
+                recordLoginAttempt(username);
+                throw new BusinessException("验证码错误");
+            }
+        }
+
         // 根据用户名查询用户
         User user = userMapper.findByUsername(username);
         if (Objects.isNull(user)) {
             // 记录失败次数
             recordLoginAttempt(username);
+            // 记录审计日志
+            auditLogService.logFailure("LOGIN", "用户登录失败：用户不存在", 
+                null, username, httpRequestUtils.getClientIp(), 
+                httpRequestUtils.getUserAgent(), "用户名或密码错误",
+                httpRequestUtils.getRequestMethod(), httpRequestUtils.getRequestPath());
             throw new BusinessException("用户名或密码错误");
         }
 
         // 检查用户状态
         if (user.getStatus() == 0) {
+            auditLogService.logFailure("LOGIN", "用户登录失败：用户已被禁用", 
+                user.getId(), username, httpRequestUtils.getClientIp(), 
+                httpRequestUtils.getUserAgent(), "用户已被禁用",
+                httpRequestUtils.getRequestMethod(), httpRequestUtils.getRequestPath());
             throw new BusinessException("用户已被禁用");
         }
 
@@ -180,6 +224,11 @@ public class UserServiceImpl implements UserService {
         if (!passwordUtils.matches(request.getPassword(), user.getPassword())) {
             // 记录失败次数
             recordLoginAttempt(username);
+            // 记录审计日志
+            auditLogService.logFailure("LOGIN", "用户登录失败：密码错误", 
+                user.getId(), username, httpRequestUtils.getClientIp(), 
+                httpRequestUtils.getUserAgent(), "用户名或密码错误",
+                httpRequestUtils.getRequestMethod(), httpRequestUtils.getRequestPath());
             throw new BusinessException("用户名或密码错误");
         }
 
@@ -203,6 +252,12 @@ public class UserServiceImpl implements UserService {
         userInfo.setPhone(user.getPhone());
         response.setUser(userInfo);
 
+        // 记录审计日志
+        auditLogService.logSuccess("LOGIN", "用户登录成功", 
+            user.getId(), username, httpRequestUtils.getClientIp(), 
+            httpRequestUtils.getUserAgent(), httpRequestUtils.getRequestMethod(), 
+            httpRequestUtils.getRequestPath());
+
         return response;
     }
 
@@ -212,6 +267,15 @@ public class UserServiceImpl implements UserService {
         Long userId = jwtUtils.getUserIdFromToken(token);
         long expiresTime = jwtUtils.getExpireTime();
         redisUtils.set(TOKEN_BLACKLIST_PREFIX + token, userId, expiresTime / 1000);
+        
+        // 记录审计日志
+        User user = userMapper.selectById(userId);
+        if (user != null) {
+            auditLogService.logSuccess("LOGOUT", "用户登出", 
+                userId, user.getUsername(), httpRequestUtils.getClientIp(), 
+                httpRequestUtils.getUserAgent(), httpRequestUtils.getRequestMethod(), 
+                httpRequestUtils.getRequestPath());
+        }
     }
 
     @Override
@@ -460,8 +524,23 @@ public class UserServiceImpl implements UserService {
             // 更新密码
             int result = userMapper.updateById(updateUser);
             logger.info("用户密码更新成功，ID: {}", userId);
+            
+            // 记录审计日志
+            auditLogService.logSuccess("PASSWORD_CHANGE", "修改用户密码", 
+                userId, existingUser.getUsername(), httpRequestUtils.getClientIp(), 
+                httpRequestUtils.getUserAgent(), httpRequestUtils.getRequestMethod(), 
+                httpRequestUtils.getRequestPath());
+            
             return result > 0;
         } catch (BusinessException e) {
+            // 记录失败审计日志
+            User existingUser = userMapper.selectById(userId);
+            if (existingUser != null) {
+                auditLogService.logFailure("PASSWORD_CHANGE", "修改用户密码失败", 
+                    userId, existingUser.getUsername(), httpRequestUtils.getClientIp(), 
+                    httpRequestUtils.getUserAgent(), e.getMessage(),
+                    httpRequestUtils.getRequestMethod(), httpRequestUtils.getRequestPath());
+            }
             throw e;
         } catch (Exception e) {
             logger.error("更新用户密码失败，ID: {}", userId, e);
@@ -758,5 +837,133 @@ public class UserServiceImpl implements UserService {
         
         response.setStatus(status);
         return response;
+    }
+    
+    @Override
+    public void sendEmailCode(String email) {
+        logger.info("发送邮箱验证码，邮箱: {}", email);
+        
+        // 检查邮箱格式
+        if (!email.matches("^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$")) {
+            throw new BusinessException("邮箱格式不正确");
+        }
+        
+        // 检查用户是否存在
+        User user = userMapper.findByEmail(email);
+        if (Objects.isNull(user)) {
+            throw new BusinessException("该邮箱未注册");
+        }
+        
+        // 检查是否在1分钟内已发送过验证码（防止频繁发送）
+        MockData existingData = mockDataMapper.findByTypeAndKey("email_code", email);
+        if (Objects.nonNull(existingData)) {
+            long secondsSinceCreation = java.time.Duration.between(
+                existingData.getCreatedAt(), LocalDateTime.now()).getSeconds();
+            if (secondsSinceCreation < 60) {
+                throw new BusinessException("验证码发送过于频繁，请稍后再试");
+            }
+        }
+        
+        // 生成6位随机验证码
+        String code = String.format("%06d", (int)(Math.random() * 1000000));
+        
+        // 保存到mock_data表（5分钟有效）
+        MockData mockData = new MockData();
+        mockData.setDataType("email_code");
+        mockData.setDataKey(email);
+        mockData.setDataValue(code);
+        mockData.setStatus("active");
+        mockData.setExpireTime(LocalDateTime.now().plusMinutes(5));
+        mockData.setCreatedAt(LocalDateTime.now());
+        mockData.setUpdatedAt(LocalDateTime.now());
+        
+        // 如果有旧数据，先更新状态为已使用
+        if (Objects.nonNull(existingData)) {
+            mockDataMapper.updateStatus(existingData.getId(), "used");
+        }
+        
+        mockDataMapper.insert(mockData);
+        
+        logger.info("邮箱验证码已生成并保存，邮箱: {}, 验证码: {}", email, code);
+        // 注意：实际生产环境应该调用邮件服务发送验证码，这里只是保存到数据库
+    }
+    
+    @Override
+    public void resetPassword(String type, String account, String code, String newPassword) {
+        logger.info("重置密码，方式: {}, 账号: {}", type, account);
+        
+        User user = null;
+        String codeType = "";
+        
+        if ("email".equals(type)) {
+            // 邮箱重置
+            codeType = "email_code";
+            if (!account.matches("^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$")) {
+                throw new BusinessException("邮箱格式不正确");
+            }
+            user = userMapper.findByEmail(account);
+            if (Objects.isNull(user)) {
+                throw new BusinessException("该邮箱未注册");
+            }
+        } else if ("phone".equals(type)) {
+            // 手机号重置
+            codeType = "sms_code";
+            if (!account.matches("^1[3-9]\\d{9}$")) {
+                throw new BusinessException("手机号格式不正确");
+            }
+            user = userMapper.findByPhone(account);
+            if (Objects.isNull(user)) {
+                throw new BusinessException("该手机号未注册");
+            }
+        } else {
+            throw new BusinessException("不支持的重置方式");
+        }
+        
+        // 检查用户状态
+        if (user.getStatus() == 0) {
+            throw new BusinessException("用户已被禁用");
+        }
+        
+        // 从mock_data表查询验证码
+        MockData mockData = mockDataMapper.findByTypeAndKey(codeType, account);
+        if (Objects.isNull(mockData)) {
+            throw new BusinessException("验证码不存在或已过期");
+        }
+        
+        // 检查验证码是否过期
+        if (Objects.nonNull(mockData.getExpireTime()) && 
+            mockData.getExpireTime().isBefore(LocalDateTime.now())) {
+            mockDataMapper.updateStatus(mockData.getId(), "expired");
+            throw new BusinessException("验证码已过期");
+        }
+        
+        // 检查验证码是否已使用
+        if ("used".equals(mockData.getStatus())) {
+            throw new BusinessException("验证码已被使用");
+        }
+        
+        // 验证验证码
+        if (!code.equals(mockData.getDataValue())) {
+            throw new BusinessException("验证码错误");
+        }
+        
+        // 标记验证码为已使用
+        mockDataMapper.updateStatus(mockData.getId(), "used");
+        
+        // 更新密码
+        String encodedPassword = passwordUtils.encode(newPassword);
+        User updateUser = new User();
+        updateUser.setId(user.getId());
+        updateUser.setPassword(encodedPassword);
+        updateUser.setUpdatedAt(LocalDateTime.now());
+        userMapper.updateById(updateUser);
+        
+        logger.info("密码重置成功，用户ID: {}, 用户名: {}", user.getId(), user.getUsername());
+        
+        // 记录审计日志
+        auditLogService.logSuccess("PASSWORD_RESET", "通过" + ("email".equals(type) ? "邮箱" : "手机号") + "重置密码", 
+            user.getId(), user.getUsername(), httpRequestUtils.getClientIp(), 
+            httpRequestUtils.getUserAgent(), httpRequestUtils.getRequestMethod(), 
+            httpRequestUtils.getRequestPath());
     }
 }

@@ -7,6 +7,9 @@ import com.logindemo.model.dto.LoginRequest;
 import com.logindemo.model.dto.PhoneLoginRequest;
 import com.logindemo.model.dto.RegisterRequest;
 import com.logindemo.model.dto.SmsCodeRequest;
+import com.logindemo.model.dto.SendEmailCodeRequest;
+import com.logindemo.model.dto.ForgotPasswordRequest;
+import com.logindemo.model.dto.ResetPasswordRequest;
 import com.logindemo.model.dto.WechatQrcodeResponse;
 import com.logindemo.model.dto.WechatStatusResponse;
 import com.logindemo.service.MenuService;
@@ -178,6 +181,43 @@ public class AuthController {
         } catch (Exception e) {
             logger.error("查询微信扫码状态失败，ticket: {}, 错误信息: {}", 
                     ticket, e.getMessage(), e);
+            throw e;
+        }
+    }
+
+    /**
+     * 发送邮箱验证码（用于密码找回）
+     */
+    @PostMapping("/send-email-code")
+    @Operation(summary = "发送邮箱验证码（用于密码找回）")
+    public ApiResponse<?> sendEmailCode(@Valid @RequestBody SendEmailCodeRequest request) {
+        logger.info("收到发送邮箱验证码请求，邮箱: {}", request.getEmail());
+        try {
+            userService.sendEmailCode(request.getEmail());
+            logger.info("邮箱验证码发送成功，邮箱: {}", request.getEmail());
+            return ApiResponse.success();
+        } catch (Exception e) {
+            logger.error("发送邮箱验证码失败，邮箱: {}, 错误信息: {}", 
+                    request.getEmail(), e.getMessage(), e);
+            throw e;
+        }
+    }
+
+    /**
+     * 重置密码
+     */
+    @PostMapping("/reset-password")
+    @Operation(summary = "重置密码")
+    public ApiResponse<?> resetPassword(@Valid @RequestBody ResetPasswordRequest request) {
+        logger.info("收到重置密码请求，方式: {}, 账号: {}", request.getType(), request.getAccount());
+        try {
+            userService.resetPassword(request.getType(), request.getAccount(), 
+                    request.getCode(), request.getNewPassword());
+            logger.info("密码重置成功，方式: {}, 账号: {}", request.getType(), request.getAccount());
+            return ApiResponse.success();
+        } catch (Exception e) {
+            logger.error("密码重置失败，方式: {}, 账号: {}, 错误信息: {}", 
+                    request.getType(), request.getAccount(), e.getMessage(), e);
             throw e;
         }
     }

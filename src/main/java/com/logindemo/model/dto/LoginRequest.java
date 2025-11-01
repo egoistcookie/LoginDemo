@@ -16,4 +16,14 @@ public class LoginRequest {
     private String password;
     
     private Boolean rememberMe = false;
+    
+    /**
+     * 验证码Key（当需要验证码时）
+     */
+    private String captchaKey;
+    
+    /**
+     * 验证码值（当需要验证码时）
+     */
+    private String captchaCode;
 }
