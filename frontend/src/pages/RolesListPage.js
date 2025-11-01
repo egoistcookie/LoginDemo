@@ -101,7 +101,6 @@ const RolesListPage = () => {
       if (response.data.code === 200) {
         // 将菜单转换为树形结构
         const menus = response.data.data;
-        const topMenus = menus.filter(menu => menu.parentId === 0);
         const menuMap = new Map();
         
         // 创建菜单映射

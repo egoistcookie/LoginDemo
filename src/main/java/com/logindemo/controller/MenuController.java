@@ -27,14 +27,7 @@ public class MenuController {
         return ResponseEntity.ok(ApiResponse.success(menus));
     }
     
-    /**
-     * 获取当前用户的菜单树
-     */
-    @GetMapping("/user-menu-tree")
-    public ResponseEntity<ApiResponse<List<Menu>>> getUserMenuTree() {
-        // 这里暂时返回空，后面会在AuthController中实现获取用户菜单的逻辑
-        return ResponseEntity.ok(ApiResponse.success(null));
-    }
+    // '/user-menu-tree'接口已移除，此功能在AuthController中实现
     
     /**
      * 添加新菜单

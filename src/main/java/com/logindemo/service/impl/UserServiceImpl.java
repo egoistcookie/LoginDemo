@@ -382,6 +382,7 @@ public class UserServiceImpl implements UserService {
     private void checkUserLocked(String username) {
         if (redisUtils.hasKey(USER_LOCK_PREFIX + username)) {
             long remainingTime = redisUtils.getExpire(USER_LOCK_PREFIX + username);
+            logger.debug("用户[{}]账户已被锁定，剩余锁定时间: {}秒", username, remainingTime);
             throw new BusinessException("账户已被锁定，请" + remainingTime + "秒后再试");
         }
     }
@@ -391,9 +392,12 @@ public class UserServiceImpl implements UserService {
      */
     private void recordLoginAttempt(String username) {
         Long attempts = redisUtils.increment(LOGIN_ATTEMPT_PREFIX + username, 3600); // 1小时内的失败次数
+        logger.debug("用户[{}]登录失败，当前失败次数: {}", username, attempts);
         if (attempts >= maxLoginAttempts) {
             // 锁定账户
             redisUtils.set(USER_LOCK_PREFIX + username, "locked", lockDuration);
+            logger.info("用户[{}]登录失败次数超过限制({}次)，账户已被锁定{}秒", 
+                       username, maxLoginAttempts, lockDuration);
             // 清除失败记录
             redisUtils.delete(LOGIN_ATTEMPT_PREFIX + username);
             throw new BusinessException("登录失败次数过多，账户已被锁定" + lockDuration + "秒");

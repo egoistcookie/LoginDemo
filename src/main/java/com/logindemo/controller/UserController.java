@@ -4,7 +4,6 @@ import com.logindemo.model.User;
 import com.logindemo.model.dto.ApiResponse;
 import com.logindemo.model.dto.AuthResponse;
 import com.logindemo.service.UserService;
-import com.logindemo.service.RoleService;
 import com.logindemo.service.UserRoleService;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import io.swagger.v3.oas.annotations.Operation;
@@ -28,8 +27,7 @@ public class UserController {
     @Autowired
     private UserService userService;
     
-    @Autowired
-    private RoleService roleService;
+    // RoleService注入已移除，不再使用
     
     @Autowired
     private UserRoleService userRoleService;

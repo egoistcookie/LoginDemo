@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Table, Button, Modal, Form, Input, Select, message, Typography, TreeSelect, InputNumber } from 'antd';
 import { PlusOutlined, DeleteOutlined, EditOutlined, ReloadOutlined } from '@ant-design/icons';
 import axios from 'axios';
@@ -13,36 +13,11 @@ const MenusListPage = () => {
   const [editingMenu, setEditingMenu] = useState(null);
   const [confirmLoading, setConfirmLoading] = useState(false);
   const [form] = Form.useForm();
-  const [menuTree, setMenuTree] = useState([]);
+  // menuTree状态已移除，不再使用
   const [parentMenus, setParentMenus] = useState([]);
 
-  // 加载菜单数据
-  const loadMenus = async () => {
-    setLoading(true);
-    try {
-      const token = localStorage.getItem('accessToken');
-      const response = await axios.get('/menus', {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      
-      if (response.data.code === 200) {
-        setMenus(response.data.data);
-        
-        // 构建用于选择父菜单的树形结构
-        buildParentMenus(response.data.data);
-      } else {
-        message.error(response.data.message || '加载菜单失败');
-      }
-    } catch (error) {
-      console.error('加载菜单失败:', error);
-      message.error('加载菜单失败');
-    } finally {
-      setLoading(false);
-    }
-  };
-
   // 构建父菜单选项
-  const buildParentMenus = (allMenus) => {
+  const buildParentMenus = useCallback((allMenus) => {
     // 创建菜单映射
     const menuMap = new Map();
     allMenus.forEach(menu => {
@@ -71,7 +46,32 @@ const MenusListPage = () => {
     // 转换为数组
     const treeOptions = [rootOption, ...Array.from(menuMap.values()).filter(menu => menu.title !== undefined)];
     setParentMenus(treeOptions);
-  };
+  }, []);
+
+  // 加载菜单数据
+  const loadMenus = useCallback(async () => {
+    setLoading(true);
+    try {
+      const token = localStorage.getItem('accessToken');
+      const response = await axios.get('/menus', {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      if (response.data.code === 200) {
+        setMenus(response.data.data);
+        
+        // 构建用于选择父菜单的树形结构
+        buildParentMenus(response.data.data);
+      } else {
+        message.error(response.data.message || '加载菜单失败');
+      }
+    } catch (error) {
+      console.error('加载菜单失败:', error);
+      message.error('加载菜单失败');
+    } finally {
+      setLoading(false);
+    }
+  }, [buildParentMenus]);
 
   // 处理添加菜单
   const handleAddMenu = () => {
@@ -173,7 +173,7 @@ const MenusListPage = () => {
   // 组件挂载时加载数据
   useEffect(() => {
     loadMenus();
-  }, []);
+  }, [loadMenus]);
 
   // 表格列配置
   const columns = [

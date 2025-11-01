@@ -1,8 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Layout, Typography, Button, message, Menu } from 'antd';
 import { LogoutOutlined, UserOutlined, HomeOutlined, UserAddOutlined, UnorderedListOutlined, SettingOutlined, 
          BarChartOutlined, FileTextOutlined, DatabaseOutlined, FileAddOutlined, DownloadOutlined,
-         ToolOutlined, BookOutlined, InfoCircleOutlined } from '@ant-design/icons';
+         BookOutlined, InfoCircleOutlined } from '@ant-design/icons';
 import axios from 'axios';
 import UsersListPage from './UsersListPage';
 import RolesListPage from './RolesListPage';
@@ -20,7 +20,7 @@ const MainPage = ({ setIsAuthenticated }) => {
   const [menuLoading, setMenuLoading] = useState(true);
   
   // 根据菜单key获取对应的图标
-  const getMenuIcon = (menuKey) => {
+  const getMenuIcon = useCallback((menuKey) => {
     const iconMap = {
       'home': <HomeOutlined />,
       'dashboard': <BarChartOutlined />,
@@ -44,10 +44,10 @@ const MainPage = ({ setIsAuthenticated }) => {
       'about': <InfoCircleOutlined />
     };
     return iconMap[menuKey] || <UnorderedListOutlined />;
-  };
+  }, []);
   
   // 构建菜单结构
-  const buildMenuItems = (menus) => {
+  const buildMenuItems = useCallback((menus) => {
     return menus.map(menu => {
       const item = {
         key: menu.key,
@@ -61,7 +61,7 @@ const MainPage = ({ setIsAuthenticated }) => {
       
       return item;
     });
-  };
+  }, [getMenuIcon]);
 
   // 获取用户信息和菜单
   useEffect(() => {
@@ -100,7 +100,7 @@ const MainPage = ({ setIsAuthenticated }) => {
     };
 
     fetchData();
-  }, []);
+  }, [buildMenuItems]);
 
   // 登出
   const handleLogout = async () => {

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Form, Input, Button, Checkbox, message, Typography, Card } from 'antd';
 import { UserOutlined, LockOutlined } from '@ant-design/icons';
 import { Link, useNavigate } from 'react-router-dom';
@@ -11,31 +11,8 @@ const LoginPage = ({ setIsAuthenticated }) => {
   const navigate = useNavigate();
   const [form] = Form.useForm();
 
-  // 自动登录功能 - 只在页面刷新时触发，不在用户主动登出后触发
-  useEffect(() => {
-    // 检查是否是用户主动登出
-    const isUserInitiatedLogout = sessionStorage.getItem('userInitiatedLogout') === 'true';
-    
-    // 如果是用户主动登出，清除标志但不执行自动登录
-    if (isUserInitiatedLogout) {
-      // 清除登出标志，以便下次页面刷新时可以正常自动登录
-      sessionStorage.removeItem('userInitiatedLogout');
-      return; // 直接返回，不执行自动登录
-    }
-    
-    // 如果不是用户主动登出，执行自动登录
-    // 默认的测试账号
-    const defaultCredentials = {
-      username: '1111',
-      password: '111111'
-    };
-    
-    // 直接调用登录方法
-    handleAutoLogin(defaultCredentials);
-  }, []);
-
   // 自动登录处理函数
-  const handleAutoLogin = async (credentials) => {
+  const handleAutoLogin = useCallback(async (credentials) => {
     setLoading(true);
     try {
       const response = await axios.post('/auth/login', credentials);
@@ -61,7 +38,30 @@ const LoginPage = ({ setIsAuthenticated }) => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [navigate, setIsAuthenticated]);
+
+  // 自动登录功能 - 只在页面刷新时触发，不在用户主动登出后触发
+  useEffect(() => {
+    // 检查是否是用户主动登出
+    const isUserInitiatedLogout = sessionStorage.getItem('userInitiatedLogout') === 'true';
+    
+    // 如果是用户主动登出，清除标志但不执行自动登录
+    if (isUserInitiatedLogout) {
+      // 清除登出标志，以便下次页面刷新时可以正常自动登录
+      sessionStorage.removeItem('userInitiatedLogout');
+      return; // 直接返回，不执行自动登录
+    }
+    
+    // 如果不是用户主动登出，执行自动登录
+    // 默认的测试账号
+    const defaultCredentials = {
+      username: '1111',
+      password: '111111'
+    };
+    
+    // 直接调用登录方法
+    handleAutoLogin(defaultCredentials);
+  }, [handleAutoLogin]);
 
   const onFinish = async (values) => {
     setLoading(true);

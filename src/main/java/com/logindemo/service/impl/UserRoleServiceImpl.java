@@ -33,9 +33,4 @@ public class UserRoleServiceImpl extends ServiceImpl<UserRoleMapper, UserRole> i
         return true;
     }
     
-    @Override
-    public List<Long> getUserIdsByRoleId(Long roleId) {
-        // 这里可以根据需要实现，暂时返回空列表
-        return List.of();
-    }
 }

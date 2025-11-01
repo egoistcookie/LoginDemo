@@ -18,9 +18,4 @@ public interface UserRoleService extends IService<UserRole> {
      * 为用户分配角色
      */
     boolean assignRolesToUser(Long userId, List<Long> roleIds);
-    
-    /**
-     * 根据角色ID查询用户ID列表
-     */
-    List<Long> getUserIdsByRoleId(Long roleId);
 }
