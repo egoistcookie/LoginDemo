@@ -58,6 +58,9 @@ public class UserServiceImpl implements UserService {
     
     @Autowired
     private ObjectMapper objectMapper;
+    
+    @Autowired
+    private com.logindemo.service.CaptchaService captchaService;
 
     @Value("${login.max-attempts}")
     private int maxLoginAttempts;
@@ -162,6 +165,20 @@ public class UserServiceImpl implements UserService {
 
         // 检查用户是否被锁定
         checkUserLocked(username);
+
+        // 检查是否需要验证码
+        boolean requiresCaptcha = captchaService.requiresCaptcha(username);
+        if (requiresCaptcha) {
+            // 如果需要验证码，验证验证码
+            if (request.getCaptchaKey() == null || request.getCaptchaCode() == null) {
+                throw new BusinessException("请输入验证码");
+            }
+            if (!captchaService.validateCaptcha(request.getCaptchaKey(), request.getCaptchaCode())) {
+                // 验证码错误，记录失败次数
+                recordLoginAttempt(username);
+                throw new BusinessException("验证码错误");
+            }
+        }
 
         // 根据用户名查询用户
         User user = userMapper.findByUsername(username);

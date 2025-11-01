@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Form, Input, Button, Checkbox, message, Typography, Card, Tabs, Spin } from 'antd';
-import { UserOutlined, LockOutlined, MobileOutlined, WechatOutlined } from '@ant-design/icons';
+import { UserOutlined, LockOutlined, MobileOutlined, WechatOutlined, ReloadOutlined } from '@ant-design/icons';
 import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 
@@ -15,6 +15,10 @@ const LoginPage = ({ setIsAuthenticated }) => {
   const [wechatQrcode, setWechatQrcode] = useState('');
   const [wechatLoading, setWechatLoading] = useState(false);
   const [qrcodeStatus, setQrcodeStatus] = useState('waiting'); // waiting, scanned, expired, success
+  const [captchaRequired, setCaptchaRequired] = useState(false);
+  const [captchaKey, setCaptchaKey] = useState('');
+  const [captchaImage, setCaptchaImage] = useState('');
+  const [captchaLoading, setCaptchaLoading] = useState(false);
   const navigate = useNavigate();
   const [passwordForm] = Form.useForm();
   const [phoneForm] = Form.useForm();
@@ -73,19 +77,88 @@ const LoginPage = ({ setIsAuthenticated }) => {
     handleAutoLogin(defaultCredentials);
   }, [handleAutoLogin]);
 
+  // 获取验证码图片
+  const fetchCaptcha = async () => {
+    setCaptchaLoading(true);
+    try {
+      const response = await axios.get('/captcha/image');
+      if (response.data.code === 200) {
+        setCaptchaKey(response.data.data.captchaKey);
+        setCaptchaImage(response.data.data.image);
+      } else {
+        message.error(response.data.message || '获取验证码失败');
+      }
+    } catch (error) {
+      console.error('获取验证码失败:', error);
+      message.error('获取验证码失败，请稍后重试');
+    } finally {
+      setCaptchaLoading(false);
+    }
+  };
+
+  // 检查是否需要验证码
+  const checkCaptchaRequired = async (username) => {
+    if (!username) {
+      setCaptchaRequired(false);
+      return;
+    }
+    try {
+      const response = await axios.get(`/captcha/required?username=${encodeURIComponent(username)}`);
+      if (response.data.code === 200) {
+        const required = response.data.data;
+        setCaptchaRequired(required);
+        if (required && !captchaImage) {
+          // 如果需要验证码且还没有获取，自动获取
+          fetchCaptcha();
+        }
+      }
+    } catch (error) {
+      console.error('检查验证码需求失败:', error);
+      // 失败时不显示错误，默认不需要验证码
+      setCaptchaRequired(false);
+    }
+  };
+
   // 账号密码登录
   const onPasswordLogin = async (values) => {
     setLoading(true);
     try {
-      const response = await axios.post('/auth/login', values);
+      // 如果需要验证码，添加验证码信息
+      const loginData = { ...values };
+      if (captchaRequired) {
+        loginData.captchaKey = captchaKey;
+        loginData.captchaCode = values.captchaCode;
+      }
+      
+      const response = await axios.post('/auth/login', loginData);
       if (response.data.code === 200) {
+        // 登录成功，清除验证码状态
+        setCaptchaRequired(false);
+        setCaptchaKey('');
+        setCaptchaImage('');
         handleLoginSuccess(response.data.data);
       } else {
         message.error(response.data.message || '登录失败');
+        // 登录失败后重新获取验证码
+        if (captchaRequired) {
+          fetchCaptcha();
+        }
       }
     } catch (error) {
       if (error.response) {
-        message.error(error.response.data.message || '登录失败');
+        const errorMsg = error.response.data.message || '登录失败';
+        message.error(errorMsg);
+        // 如果返回需要验证码的错误，检查是否需要验证码
+        if (errorMsg.includes('验证码')) {
+          const username = passwordForm.getFieldValue('username');
+          if (username) {
+            checkCaptchaRequired(username);
+          }
+        }
+        // 登录失败后重新获取验证码
+        if (captchaRequired) {
+          fetchCaptcha();
+        }
       } else {
         message.error('网络错误，请稍后重试');
       }
@@ -311,7 +384,16 @@ const LoginPage = ({ setIsAuthenticated }) => {
                 className="form-item-margin"
                 rules={[{ required: true, message: '请输入用户名!' }]}
               >
-                <Input prefix={<UserOutlined className="site-form-item-icon" />} placeholder="用户名" />
+                <Input 
+                  prefix={<UserOutlined className="site-form-item-icon" />} 
+                  placeholder="用户名"
+                  onBlur={(e) => {
+                    const username = e.target.value;
+                    if (username) {
+                      checkCaptchaRequired(username);
+                    }
+                  }}
+                />
               </Form.Item>
               
               <Form.Item
@@ -325,6 +407,68 @@ const LoginPage = ({ setIsAuthenticated }) => {
                   placeholder="密码"
                 />
               </Form.Item>
+              
+              {captchaRequired && (
+                <Form.Item
+                  name="captchaCode"
+                  className="form-item-margin"
+                  rules={[{ required: true, message: '请输入验证码!' }]}
+                >
+                  <div className="captcha-container">
+                    <Input
+                      placeholder="请输入验证码"
+                      maxLength={4}
+                      className="captcha-input"
+                      onPressEnter={() => passwordForm.submit()}
+                      autoComplete="off"
+                    />
+                    {captchaLoading ? (
+                      <div style={{ 
+                        width: '110px', 
+                        height: '40px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center'
+                      }}>
+                        <Spin size="small" />
+                      </div>
+                    ) : captchaImage ? (
+                      <div className="captcha-image-container">
+                        <img
+                          src={captchaImage}
+                          alt="验证码"
+                          className="captcha-image"
+                          onClick={fetchCaptcha}
+                          title="点击刷新验证码"
+                        />
+                        <Button
+                          type="text"
+                          size="small"
+                          icon={<ReloadOutlined />}
+                          onClick={fetchCaptcha}
+                          style={{ 
+                            padding: '0',
+                            minWidth: '24px',
+                            height: '24px',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center'
+                          }}
+                          title="刷新验证码"
+                        />
+                      </div>
+                    ) : (
+                      <Button 
+                        size="small" 
+                        onClick={fetchCaptcha}
+                        style={{ height: '40px', minWidth: '110px' }}
+                      >
+                        获取验证码
+                      </Button>
+                    )}
+                  </div>
+                </Form.Item>
+              )}
               
               <Form.Item className="form-item-margin">
                 <Form.Item name="remember" valuePropName="checked" noStyle>
@@ -375,27 +519,27 @@ const LoginPage = ({ setIsAuthenticated }) => {
                 className="form-item-margin"
                 rules={[{ required: true, message: '请输入验证码!' }]}
               >
-                <Input.Group compact>
+                <div className="sms-code-container">
                   <Form.Item
                     name="code"
                     noStyle
                     rules={[{ required: true, message: '请输入验证码!' }]}
                   >
                     <Input
-                      style={{ width: 'calc(100% - 120px)' }}
+                      className="sms-code-input"
                       placeholder="验证码"
                       maxLength={6}
                     />
                   </Form.Item>
                   <Button
-                    style={{ width: '120px' }}
+                    style={{ height: '40px', minWidth: '120px', flexShrink: 0 }}
                     onClick={sendSmsCode}
                     loading={smsLoading}
                     disabled={countdown > 0}
                   >
                     {countdown > 0 ? `${countdown}秒` : '获取验证码'}
                   </Button>
-                </Input.Group>
+                </div>
               </Form.Item>
               
               <Form.Item className="form-item-margin">

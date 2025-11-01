@@ -40,6 +40,160 @@ code {
   margin-bottom: 16px;
 }
 
+/* 验证码图片样式 */
+.captcha-image {
+  height: 40px;
+  cursor: pointer;
+  border: 1px solid #d9d9d9;
+  border-radius: 4px;
+  transition: all 0.3s;
+  user-select: none;
+}
+
+.captcha-image:hover {
+  border-color: #40a9ff;
+  box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.2);
+}
+
+/* 登录表单优化 */
+.login-form .ant-input-affix-wrapper {
+  height: 40px !important;
+  border-radius: 4px;
+  font-size: 14px;
+  border: 1px solid #d9d9d9 !important;
+  padding: 0 !important;
+  display: flex !important;
+  align-items: center !important;
+  overflow: hidden !important;
+}
+
+.login-form .ant-input-affix-wrapper:hover {
+  border-color: #40a9ff !important;
+}
+
+.login-form .ant-input-affix-wrapper-focused,
+.login-form .ant-input-affix-wrapper:focus-within {
+  border-color: #40a9ff !important;
+  box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.2) !important;
+}
+
+.login-form .ant-input-affix-wrapper .ant-input {
+  border: none !important;
+  box-shadow: none !important;
+  height: 100% !important;
+  line-height: 1.5715 !important;
+  padding: 4px 11px !important;
+  margin: 0 !important;
+  vertical-align: middle !important;
+}
+
+.login-form .ant-input-affix-wrapper .ant-input-prefix {
+  margin-right: 8px !important;
+  display: flex !important;
+  align-items: center !important;
+  height: 100% !important;
+  padding-left: 11px !important;
+}
+
+.login-form .ant-input {
+  height: 40px;
+  border-radius: 4px;
+  font-size: 14px;
+  border: 1px solid #d9d9d9 !important;
+}
+
+.login-form .ant-input:hover {
+  border-color: #40a9ff !important;
+}
+
+.login-form .ant-input:focus {
+  border-color: #40a9ff !important;
+  box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.2) !important;
+}
+
+.login-form .ant-btn-primary {
+  height: 40px;
+  border-radius: 4px;
+  font-size: 16px;
+  font-weight: 500;
+}
+
+/* 验证码区域优化 - 确保与带prefix的输入框对齐 */
+.captcha-container {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  width: 100%;
+}
+
+.captcha-input {
+  flex: 1;
+  height: 40px;
+}
+
+/* 确保所有输入框宽度和高度一致 */
+.login-form .ant-input-affix-wrapper,
+.login-form .ant-input {
+  width: 100% !important;
+  box-sizing: border-box;
+}
+
+/* 确保验证码输入框与带prefix的输入框左边距一致 */
+.login-form .ant-form-item .captcha-container .ant-input {
+  padding-left: 19px;
+  border: 1px solid #d9d9d9 !important;
+}
+
+.login-form .ant-form-item .captcha-container .ant-input:hover {
+  border-color: #40a9ff !important;
+}
+
+.login-form .ant-form-item .captcha-container .ant-input:focus {
+  border-color: #40a9ff !important;
+  box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.2) !important;
+}
+
+/* 手机验证码容器样式 */
+.sms-code-container {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  width: 100%;
+}
+
+/* 确保手机验证码输入框也对齐 */
+.sms-code-input {
+  flex: 1;
+  height: 40px;
+  padding-left: 19px !important;
+  border: 1px solid #d9d9d9 !important;
+}
+
+.sms-code-input:hover {
+  border-color: #40a9ff !important;
+}
+
+.sms-code-input:focus {
+  border-color: #40a9ff !important;
+  box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.2) !important;
+}
+
+.captcha-image-container {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  height: 40px;
+  flex-shrink: 0;
+}
+
+/* 响应式优化 */
+@media (max-width: 480px) {
+  .login-form {
+    width: calc(100% - 32px);
+    margin: 16px;
+  }
+}
+
 /* 注册页面样式 */
 .register-container {
   display: flex;
