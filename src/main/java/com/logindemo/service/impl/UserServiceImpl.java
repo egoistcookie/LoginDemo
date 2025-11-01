@@ -1,13 +1,18 @@
 package com.logindemo.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.logindemo.exception.BusinessException;
+import com.logindemo.mapper.MockDataMapper;
 import com.logindemo.mapper.UserMapper;
 import com.logindemo.model.Menu;
+import com.logindemo.model.MockData;
 import com.logindemo.model.User;
 import com.logindemo.model.dto.AuthResponse;
 import com.logindemo.model.dto.LoginRequest;
 import com.logindemo.model.dto.RegisterRequest;
+import com.logindemo.model.dto.WechatQrcodeResponse;
+import com.logindemo.model.dto.WechatStatusResponse;
 import com.logindemo.service.MenuService;
 import com.logindemo.service.UserService;
 import com.logindemo.utils.JwtUtils;
@@ -47,6 +52,12 @@ public class UserServiceImpl implements UserService {
 
     @Autowired
     private RedisUtils redisUtils;
+    
+    @Autowired
+    private MockDataMapper mockDataMapper;
+    
+    @Autowired
+    private ObjectMapper objectMapper;
 
     @Value("${login.max-attempts}")
     private int maxLoginAttempts;
@@ -456,5 +467,296 @@ public class UserServiceImpl implements UserService {
             logger.error("更新用户密码失败，ID: {}", userId, e);
             throw new BusinessException("更新密码失败");
         }
+    }
+    
+    @Override
+    public void sendSmsCode(String phone) {
+        logger.info("发送短信验证码，手机号: {}", phone);
+        
+        // 检查手机号格式
+        if (!phone.matches("^1[3-9]\\d{9}$")) {
+            throw new BusinessException("手机号格式不正确");
+        }
+        
+        // 检查用户是否存在（手机号登录需要用户已注册）
+        User user = userMapper.findByPhone(phone);
+        if (Objects.isNull(user)) {
+            throw new BusinessException("该手机号未注册");
+        }
+        
+        // 检查是否在1分钟内已发送过验证码（防止频繁发送）
+        MockData existingData = mockDataMapper.findByTypeAndKey("sms_code", phone);
+        if (Objects.nonNull(existingData)) {
+            long secondsSinceCreation = java.time.Duration.between(
+                existingData.getCreatedAt(), LocalDateTime.now()).getSeconds();
+            if (secondsSinceCreation < 60) {
+                throw new BusinessException("验证码发送过于频繁，请稍后再试");
+            }
+        }
+        
+        // 生成6位随机验证码
+        String code = String.format("%06d", (int)(Math.random() * 1000000));
+        
+        // 保存到mock_data表（5分钟有效）
+        MockData mockData = new MockData();
+        mockData.setDataType("sms_code");
+        mockData.setDataKey(phone);
+        mockData.setDataValue(code);
+        mockData.setStatus("active");
+        mockData.setExpireTime(LocalDateTime.now().plusMinutes(5));
+        mockData.setCreatedAt(LocalDateTime.now());
+        mockData.setUpdatedAt(LocalDateTime.now());
+        
+        // 如果有旧数据，先更新状态为已使用
+        if (Objects.nonNull(existingData)) {
+            mockDataMapper.updateStatus(existingData.getId(), "used");
+        }
+        
+        mockDataMapper.insert(mockData);
+        
+        logger.info("短信验证码已生成并保存，手机号: {}, 验证码: {}", phone, code);
+        // 注意：实际生产环境应该调用短信服务发送验证码，这里只是保存到数据库
+    }
+    
+    @Override
+    public AuthResponse loginByPhone(String phone, String code) {
+        logger.info("手机验证码登录，手机号: {}", phone);
+        
+        // 验证手机号格式
+        if (!phone.matches("^1[3-9]\\d{9}$")) {
+            throw new BusinessException("手机号格式不正确");
+        }
+        
+        // 从mock_data表查询验证码
+        MockData mockData = mockDataMapper.findByTypeAndKey("sms_code", phone);
+        if (Objects.isNull(mockData)) {
+            throw new BusinessException("验证码不存在或已过期");
+        }
+        
+        // 检查验证码是否过期
+        if (Objects.nonNull(mockData.getExpireTime()) && 
+            mockData.getExpireTime().isBefore(LocalDateTime.now())) {
+            mockDataMapper.updateStatus(mockData.getId(), "expired");
+            throw new BusinessException("验证码已过期");
+        }
+        
+        // 检查验证码是否已使用
+        if ("used".equals(mockData.getStatus())) {
+            throw new BusinessException("验证码已被使用");
+        }
+        
+        // 验证验证码
+        if (!code.equals(mockData.getDataValue())) {
+            throw new BusinessException("验证码错误");
+        }
+        
+        // 标记验证码为已使用
+        mockDataMapper.updateStatus(mockData.getId(), "used");
+        
+        // 根据手机号查询用户
+        User user = userMapper.findByPhone(phone);
+        if (Objects.isNull(user)) {
+            throw new BusinessException("用户不存在");
+        }
+        
+        // 检查用户状态
+        if (user.getStatus() == 0) {
+            throw new BusinessException("用户已被禁用");
+        }
+        
+        // 生成Token
+        String accessToken = jwtUtils.generateAccessToken(user.getId(), user.getUsername());
+        String refreshToken = jwtUtils.generateRefreshToken(user.getId(), user.getUsername());
+        
+        // 构建响应
+        AuthResponse response = new AuthResponse();
+        response.setAccessToken(accessToken);
+        response.setRefreshToken(refreshToken);
+        response.setExpiresIn(jwtUtils.getExpirationTime());
+        
+        AuthResponse.UserInfo userInfo = new AuthResponse.UserInfo();
+        userInfo.setId(user.getId());
+        userInfo.setUsername(user.getUsername());
+        userInfo.setEmail(user.getEmail());
+        userInfo.setPhone(user.getPhone());
+        response.setUser(userInfo);
+        
+        logger.info("手机验证码登录成功，用户ID: {}, 用户名: {}", user.getId(), user.getUsername());
+        return response;
+    }
+    
+    @Override
+    public WechatQrcodeResponse getWechatQrcode() {
+        logger.info("获取微信登录二维码");
+        
+        // 生成唯一的ticket
+        String ticket = "WX_TICKET_" + System.currentTimeMillis() + "_" + 
+                        String.format("%04d", (int)(Math.random() * 10000));
+        
+        // 生成二维码URL（实际应该调用微信API生成，这里使用模拟URL）
+        String qrcodeUrl = "https://via.placeholder.com/200x200?text=WeChat+QRCode+" + ticket;
+        
+        // 保存到mock_data表（2分钟有效）
+        MockData mockData = new MockData();
+        mockData.setDataType("wechat_qrcode");
+        mockData.setDataKey(ticket);
+        mockData.setDataValue(qrcodeUrl);
+        
+        // extraData存储状态信息
+        try {
+            Map<String, Object> extraMap = new HashMap<>();
+            extraMap.put("status", "waiting");
+            extraMap.put("userId", null);
+            mockData.setExtraData(objectMapper.writeValueAsString(extraMap));
+        } catch (Exception e) {
+            logger.error("序列化extraData失败", e);
+            mockData.setExtraData("{\"status\":\"waiting\",\"userId\":null}");
+        }
+        
+        mockData.setStatus("active");
+        mockData.setExpireTime(LocalDateTime.now().plusMinutes(2));
+        mockData.setCreatedAt(LocalDateTime.now());
+        mockData.setUpdatedAt(LocalDateTime.now());
+        
+        mockDataMapper.insert(mockData);
+        
+        // 构建响应
+        WechatQrcodeResponse response = new WechatQrcodeResponse();
+        response.setQrcodeUrl(qrcodeUrl);
+        response.setTicket(ticket);
+        response.setExpireSeconds(120L);
+        
+        logger.info("微信登录二维码已生成，ticket: {}", ticket);
+        return response;
+    }
+    
+    @Override
+    public WechatStatusResponse getWechatStatus(String ticket) {
+        logger.debug("查询微信扫码状态，ticket: {}", ticket);
+        
+        // 从mock_data表查询二维码数据
+        MockData mockData = mockDataMapper.findByTypeAndKey("wechat_qrcode", ticket);
+        if (Objects.isNull(mockData)) {
+            WechatStatusResponse response = new WechatStatusResponse();
+            response.setStatus("expired");
+            return response;
+        }
+        
+        // 检查是否过期
+        if (Objects.nonNull(mockData.getExpireTime()) && 
+            mockData.getExpireTime().isBefore(LocalDateTime.now())) {
+            mockDataMapper.updateStatus(mockData.getId(), "expired");
+            WechatStatusResponse response = new WechatStatusResponse();
+            response.setStatus("expired");
+            return response;
+        }
+        
+        // 解析extraData获取状态
+        String status = "waiting";
+        Long userId = null;
+        
+        try {
+            if (Objects.nonNull(mockData.getExtraData()) && !mockData.getExtraData().isEmpty()) {
+                @SuppressWarnings("unchecked")
+                Map<String, Object> extraMap = (Map<String, Object>) objectMapper.readValue(
+                    mockData.getExtraData(), Map.class);
+                status = (String) extraMap.getOrDefault("status", "waiting");
+                userId = extraMap.get("userId") != null ? 
+                    Long.valueOf(extraMap.get("userId").toString()) : null;
+            }
+        } catch (Exception e) {
+            logger.error("解析extraData失败", e);
+        }
+        
+        WechatStatusResponse response = new WechatStatusResponse();
+        
+        // 如果是等待状态，模拟扫码流程（实际应该由微信回调触发）
+        if ("waiting".equals(status)) {
+            // 模拟：30秒后自动变为已扫描状态（实际应该由微信回调设置）
+            long secondsSinceCreation = java.time.Duration.between(
+                mockData.getCreatedAt(), LocalDateTime.now()).getSeconds();
+            
+            // 模拟扫码确认流程：超过15秒认为已扫描，超过30秒认为已确认（仅用于演示）
+            if (secondsSinceCreation > 30) {
+                // 模拟用户确认登录
+                status = "confirmed";
+                
+                // 查找或创建测试用户（实际应该根据微信用户信息查找）
+                User user = userMapper.findByPhone("13800138000");
+                if (Objects.isNull(user)) {
+                    // 如果没有找到用户，创建一个测试用户
+                    user = new User();
+                    user.setUsername("wechat_user_" + System.currentTimeMillis());
+                    user.setPassword(passwordUtils.encode("123456"));
+                    user.setEmail("wechat@example.com");
+                    user.setPhone("13800138000");
+                    user.setStatus(1);
+                    user.setCreatedAt(LocalDateTime.now());
+                    user.setUpdatedAt(LocalDateTime.now());
+                    userMapper.insert(user);
+                }
+                
+                userId = user.getId();
+                
+                // 生成Token
+                String accessToken = jwtUtils.generateAccessToken(user.getId(), user.getUsername());
+                String refreshToken = jwtUtils.generateRefreshToken(user.getId(), user.getUsername());
+                
+                // 构建认证响应
+                AuthResponse authResponse = new AuthResponse();
+                authResponse.setAccessToken(accessToken);
+                authResponse.setRefreshToken(refreshToken);
+                authResponse.setExpiresIn(jwtUtils.getExpirationTime());
+                
+                AuthResponse.UserInfo userInfo = new AuthResponse.UserInfo();
+                userInfo.setId(user.getId());
+                userInfo.setUsername(user.getUsername());
+                userInfo.setEmail(user.getEmail());
+                userInfo.setPhone(user.getPhone());
+                authResponse.setUser(userInfo);
+                
+                response.setAuthResponse(authResponse);
+                
+                // 更新mock_data状态
+                try {
+                    Map<String, Object> extraMap = new HashMap<>();
+                    extraMap.put("status", "confirmed");
+                    extraMap.put("userId", userId);
+                    mockData.setExtraData(objectMapper.writeValueAsString(extraMap));
+                } catch (Exception e) {
+                    logger.error("更新extraData失败", e);
+                }
+                mockData.setStatus("used");
+                mockData.setUpdatedAt(LocalDateTime.now());
+                mockDataMapper.updateById(mockData);
+                
+            } else if (secondsSinceCreation > 15) {
+                status = "scanned";
+            }
+        } else if ("confirmed".equals(status) && Objects.nonNull(userId)) {
+            // 如果已确认，构建认证响应
+            User user = userMapper.selectById(userId);
+            if (Objects.nonNull(user)) {
+                String accessToken = jwtUtils.generateAccessToken(user.getId(), user.getUsername());
+                String refreshToken = jwtUtils.generateRefreshToken(user.getId(), user.getUsername());
+                
+                AuthResponse authResponse = new AuthResponse();
+                authResponse.setAccessToken(accessToken);
+                authResponse.setRefreshToken(refreshToken);
+                authResponse.setExpiresIn(jwtUtils.getExpirationTime());
+                
+                AuthResponse.UserInfo userInfo = new AuthResponse.UserInfo();
+                userInfo.setId(user.getId());
+                userInfo.setUsername(user.getUsername());
+                userInfo.setEmail(user.getEmail());
+                userInfo.setPhone(user.getPhone());
+                authResponse.setUser(userInfo);
+                
+                response.setAuthResponse(authResponse);
+            }
+        }
+        
+        response.setStatus(status);
+        return response;
     }
 }

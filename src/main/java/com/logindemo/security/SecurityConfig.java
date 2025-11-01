@@ -30,7 +30,17 @@ public class SecurityConfig {
             // 配置授权规则
             .authorizeRequests()
             // 允许所有人访问的接口
-            .antMatchers("/auth/login", "/auth/register", "/auth/validate", "/swagger-ui/**", "/v3/api-docs/**").permitAll()
+            .antMatchers(
+                "/auth/login", 
+                "/auth/register", 
+                "/auth/validate",
+                "/auth/send-sms-code",
+                "/auth/login-by-phone",
+                "/auth/wechat/qrcode",
+                "/auth/wechat/status",
+                "/swagger-ui/**", 
+                "/v3/api-docs/**"
+            ).permitAll()
             // 其他接口需要认证
             .anyRequest().authenticated();
 

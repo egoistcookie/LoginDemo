@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.logindemo.mapper.MockDataMapper">
+    
+    <select id="findByTypeAndKey" resultType="com.logindemo.model.MockData">
+        SELECT * FROM mock_data 
+        WHERE data_type = #{dataType} AND data_key = #{dataKey}
+        AND status = 'active'
+        AND (expire_time IS NULL OR expire_time > NOW())
+        ORDER BY created_at DESC
+        LIMIT 1
+    </select>
+    
+    <delete id="deleteExpiredData">
+        DELETE FROM mock_data 
+        WHERE expire_time IS NOT NULL AND expire_time &lt; #{expireTime}
+    </delete>
+    
+    <update id="updateStatus">
+        UPDATE mock_data 
+        SET status = #{status}, updated_at = NOW()
+        WHERE id = #{id}
+    </update>
+    
+    <select id="findByTypeAndStatus" resultType="com.logindemo.model.MockData">
+        SELECT * FROM mock_data 
+        WHERE data_type = #{dataType} AND status = #{status}
+        ORDER BY created_at DESC
+    </select>
+</mapper>
+

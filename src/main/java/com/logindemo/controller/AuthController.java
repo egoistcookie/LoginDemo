@@ -4,7 +4,11 @@ import com.logindemo.model.Menu;
 import com.logindemo.model.dto.ApiResponse;
 import com.logindemo.model.dto.AuthResponse;
 import com.logindemo.model.dto.LoginRequest;
+import com.logindemo.model.dto.PhoneLoginRequest;
 import com.logindemo.model.dto.RegisterRequest;
+import com.logindemo.model.dto.SmsCodeRequest;
+import com.logindemo.model.dto.WechatQrcodeResponse;
+import com.logindemo.model.dto.WechatStatusResponse;
 import com.logindemo.service.MenuService;
 import com.logindemo.service.UserService;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -106,5 +110,75 @@ public class AuthController {
     public ApiResponse<Boolean> validateToken(@RequestParam("token") String token) {
         boolean isValid = userService.validateToken(token);
         return ApiResponse.success(isValid);
+    }
+
+    /**
+     * 发送短信验证码
+     */
+    @PostMapping("/send-sms-code")
+    @Operation(summary = "发送短信验证码")
+    public ApiResponse<?> sendSmsCode(@Valid @RequestBody SmsCodeRequest request) {
+        logger.info("收到发送短信验证码请求，手机号: {}", request.getPhone());
+        try {
+            userService.sendSmsCode(request.getPhone());
+            logger.info("短信验证码发送成功，手机号: {}", request.getPhone());
+            return ApiResponse.success();
+        } catch (Exception e) {
+            logger.error("发送短信验证码失败，手机号: {}, 错误信息: {}", 
+                    request.getPhone(), e.getMessage(), e);
+            throw e;
+        }
+    }
+
+    /**
+     * 手机验证码登录
+     */
+    @PostMapping("/login-by-phone")
+    @Operation(summary = "手机验证码登录")
+    public ApiResponse<AuthResponse> loginByPhone(@Valid @RequestBody PhoneLoginRequest request) {
+        logger.info("收到手机验证码登录请求，手机号: {}", request.getPhone());
+        try {
+            AuthResponse response = userService.loginByPhone(request.getPhone(), request.getCode());
+            logger.info("手机验证码登录成功，手机号: {}", request.getPhone());
+            return ApiResponse.success(response);
+        } catch (Exception e) {
+            logger.error("手机验证码登录失败，手机号: {}, 错误信息: {}", 
+                    request.getPhone(), e.getMessage(), e);
+            throw e;
+        }
+    }
+
+    /**
+     * 获取微信登录二维码
+     */
+    @GetMapping("/wechat/qrcode")
+    @Operation(summary = "获取微信登录二维码")
+    public ApiResponse<WechatQrcodeResponse> getWechatQrcode() {
+        logger.info("收到获取微信登录二维码请求");
+        try {
+            WechatQrcodeResponse response = userService.getWechatQrcode();
+            logger.info("微信登录二维码获取成功，ticket: {}", response.getTicket());
+            return ApiResponse.success(response);
+        } catch (Exception e) {
+            logger.error("获取微信登录二维码失败，错误信息: {}", e.getMessage(), e);
+            throw e;
+        }
+    }
+
+    /**
+     * 查询微信扫码状态
+     */
+    @GetMapping("/wechat/status")
+    @Operation(summary = "查询微信扫码状态")
+    public ApiResponse<WechatStatusResponse> getWechatStatus(@RequestParam("ticket") String ticket) {
+        logger.debug("收到查询微信扫码状态请求，ticket: {}", ticket);
+        try {
+            WechatStatusResponse response = userService.getWechatStatus(ticket);
+            return ApiResponse.success(response);
+        } catch (Exception e) {
+            logger.error("查询微信扫码状态失败，ticket: {}, 错误信息: {}", 
+                    ticket, e.getMessage(), e);
+            throw e;
+        }
     }
 }
