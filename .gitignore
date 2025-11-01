@@ -7,7 +7,6 @@ login-service.iml
 .idea/vcs.xml
 .vscode/settings.json
 logs/application.log
-src/main/java/com/logindemo/config/RedisConfig.java
 target/*
 .idea/compiler.xml
 frontend/node_modules/*
