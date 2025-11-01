@@ -83,4 +83,24 @@ public interface UserService {
      * 更新用户密码
      */
     boolean updatePassword(Long userId, String newPassword);
+    
+    /**
+     * 发送短信验证码
+     */
+    void sendSmsCode(String phone);
+    
+    /**
+     * 手机验证码登录
+     */
+    AuthResponse loginByPhone(String phone, String code);
+    
+    /**
+     * 获取微信登录二维码
+     */
+    com.logindemo.model.dto.WechatQrcodeResponse getWechatQrcode();
+    
+    /**
+     * 查询微信扫码状态
+     */
+    com.logindemo.model.dto.WechatStatusResponse getWechatStatus(String ticket);
 }
