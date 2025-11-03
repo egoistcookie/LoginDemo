@@ -15,6 +15,11 @@
 /*!40101 SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='NO_AUTO_VALUE_ON_ZERO' */;
 /*!40111 SET @OLD_SQL_NOTES=@@SQL_NOTES, SQL_NOTES=0 */;
 
+-- 创建数据库
+CREATE DATABASE IF NOT EXISTS login_demo CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+USE login_demo;
+
 --
 -- Table structure for table `menus`
 --
@@ -127,6 +132,59 @@ CREATE TABLE `users` (
   KEY `idx_user_email` (`email`),
   KEY `idx_user_phone` (`phone`)
 ) ENGINE=InnoDB AUTO_INCREMENT=18 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='用户表';
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `audit_logs`
+--
+
+DROP TABLE IF EXISTS `audit_logs`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `audit_logs` (
+  `id` BIGINT(20) NOT NULL AUTO_INCREMENT COMMENT '主键ID',
+  `user_id` BIGINT(20) DEFAULT NULL COMMENT '用户ID',
+  `username` VARCHAR(50) DEFAULT NULL COMMENT '用户名',
+  `operation_type` VARCHAR(50) NOT NULL COMMENT '操作类型：LOGIN, LOGOUT, REGISTER, PASSWORD_CHANGE, PASSWORD_RESET, USER_UPDATE, USER_DELETE, ROLE_ASSIGN等',
+  `operation_desc` VARCHAR(255) DEFAULT NULL COMMENT '操作描述',
+  `ip_address` VARCHAR(50) DEFAULT NULL COMMENT 'IP地址',
+  `user_agent` VARCHAR(500) DEFAULT NULL COMMENT '用户代理（User-Agent）',
+  `status` VARCHAR(20) NOT NULL COMMENT '操作状态：SUCCESS, FAILURE',
+  `error_message` VARCHAR(500) DEFAULT NULL COMMENT '错误信息（如果操作失败）',
+  `request_method` VARCHAR(10) DEFAULT NULL COMMENT '请求方法：GET, POST, PUT, DELETE等',
+  `request_path` VARCHAR(255) DEFAULT NULL COMMENT '请求路径',
+  `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  PRIMARY KEY (`id`),
+  KEY `idx_user_id` (`user_id`),
+  KEY `idx_username` (`username`),
+  KEY `idx_operation_type` (`operation_type`),
+  KEY `idx_status` (`status`),
+  KEY `idx_created_at` (`created_at`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='审计日志表';
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `mock_data`
+--
+
+DROP TABLE IF EXISTS `mock_data`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `mock_data` (
+  `id` BIGINT NOT NULL AUTO_INCREMENT COMMENT '主键ID',
+  `data_type` VARCHAR(50) NOT NULL COMMENT '数据类型：sms_code-短信验证码, wechat_qrcode-微信二维码',
+  `data_key` VARCHAR(255) NOT NULL COMMENT '数据键：手机号或ticket',
+  `data_value` VARCHAR(500) DEFAULT NULL COMMENT '数据值：验证码或二维码URL',
+  `extra_data` TEXT DEFAULT NULL COMMENT '额外数据：JSON格式存储额外信息',
+  `status` VARCHAR(20) DEFAULT 'active' COMMENT '状态：active-有效, expired-过期, used-已使用',
+  `expire_time` DATETIME DEFAULT NULL COMMENT '过期时间',
+  `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  `updated_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+  PRIMARY KEY (`id`),
+  INDEX `idx_data_type_key` (`data_type`, `data_key`),
+  INDEX `idx_status` (`status`),
+  INDEX `idx_expire_time` (`expire_time`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='Mock挡板数据表';
 /*!40101 SET character_set_client = @saved_cs_client */;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
 
