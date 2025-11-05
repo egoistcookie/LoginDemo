@@ -660,56 +660,24 @@ code {
   background: rgba(64, 169, 255, 0.1) !important;
 }
 
-/* TreeSelect 复选框选中状态的节点样式 - 覆盖所有可能的选中状态 */
-.dark-theme .ant-tree-select-dropdown .ant-select-tree-treenode-checkbox-checked,
+/* TreeSelect 选中节点样式 - 覆盖所有可能的选中状态（复选框选中、节点选中、组合状态） */
 .dark-theme .ant-tree-select-dropdown .ant-select-tree-treenode-checkbox-checked .ant-select-tree-node-content-wrapper,
-.dark-theme .ant-tree-select-dropdown .ant-select-tree-node-checked,
-.dark-theme .ant-tree-select-dropdown .ant-select-tree-node-checked .ant-select-tree-node-content-wrapper {
-  background: var(--bg-tertiary) !important;
-  color: var(--text-color) !important;
-}
-
-.dark-theme .ant-tree-select-dropdown .ant-select-tree-treenode-checkbox-checked:hover,
-.dark-theme .ant-tree-select-dropdown .ant-select-tree-treenode-checkbox-checked .ant-select-tree-node-content-wrapper:hover,
-.dark-theme .ant-tree-select-dropdown .ant-select-tree-node-checked:hover,
-.dark-theme .ant-tree-select-dropdown .ant-select-tree-node-checked .ant-select-tree-node-content-wrapper:hover {
-  background: var(--bg-tertiary) !important;
-  color: var(--text-color) !important;
-}
-
-/* TreeSelect 选中节点样式 - 覆盖所有可能的选中状态 */
-.dark-theme .ant-tree-select-dropdown .ant-select-tree-treenode-selected,
+.dark-theme .ant-tree-select-dropdown .ant-select-tree-node-checked .ant-select-tree-node-content-wrapper,
 .dark-theme .ant-tree-select-dropdown .ant-select-tree-treenode-selected .ant-select-tree-node-content-wrapper,
-.dark-theme .ant-tree-select-dropdown .ant-select-tree-node-selected,
-.dark-theme .ant-tree-select-dropdown .ant-select-tree-node-selected .ant-select-tree-node-content-wrapper {
-  background: var(--bg-tertiary) !important;
-  color: var(--text-color) !important;
-}
-
-.dark-theme .ant-tree-select-dropdown .ant-select-tree-treenode-selected:hover,
-.dark-theme .ant-tree-select-dropdown .ant-select-tree-treenode-selected .ant-select-tree-node-content-wrapper:hover,
-.dark-theme .ant-tree-select-dropdown .ant-select-tree-node-selected:hover,
-.dark-theme .ant-tree-select-dropdown .ant-select-tree-node-selected .ant-select-tree-node-content-wrapper:hover {
-  background: var(--bg-tertiary) !important;
-  color: var(--text-color) !important;
-}
-
-/* 确保选中且勾选的节点样式优先级最高 - 覆盖所有组合 */
-.dark-theme .ant-tree-select-dropdown .ant-select-tree-treenode-checkbox-checked.ant-select-tree-treenode-selected,
+.dark-theme .ant-tree-select-dropdown .ant-select-tree-node-selected .ant-select-tree-node-content-wrapper,
 .dark-theme .ant-tree-select-dropdown .ant-select-tree-treenode-checkbox-checked.ant-select-tree-treenode-selected .ant-select-tree-node-content-wrapper,
-.dark-theme .ant-tree-select-dropdown .ant-select-tree-node-checked.ant-select-tree-node-selected,
 .dark-theme .ant-tree-select-dropdown .ant-select-tree-node-checked.ant-select-tree-node-selected .ant-select-tree-node-content-wrapper,
-.dark-theme .ant-tree-select-dropdown .ant-select-tree-node-selected.ant-select-tree-node-checked,
 .dark-theme .ant-tree-select-dropdown .ant-select-tree-node-selected.ant-select-tree-node-checked .ant-select-tree-node-content-wrapper {
   background: var(--bg-tertiary) !important;
   color: var(--text-color) !important;
 }
 
-.dark-theme .ant-tree-select-dropdown .ant-select-tree-treenode-checkbox-checked.ant-select-tree-treenode-selected:hover,
+.dark-theme .ant-tree-select-dropdown .ant-select-tree-treenode-checkbox-checked .ant-select-tree-node-content-wrapper:hover,
+.dark-theme .ant-tree-select-dropdown .ant-select-tree-node-checked .ant-select-tree-node-content-wrapper:hover,
+.dark-theme .ant-tree-select-dropdown .ant-select-tree-treenode-selected .ant-select-tree-node-content-wrapper:hover,
+.dark-theme .ant-tree-select-dropdown .ant-select-tree-node-selected .ant-select-tree-node-content-wrapper:hover,
 .dark-theme .ant-tree-select-dropdown .ant-select-tree-treenode-checkbox-checked.ant-select-tree-treenode-selected .ant-select-tree-node-content-wrapper:hover,
-.dark-theme .ant-tree-select-dropdown .ant-select-tree-node-checked.ant-select-tree-node-selected:hover,
 .dark-theme .ant-tree-select-dropdown .ant-select-tree-node-checked.ant-select-tree-node-selected .ant-select-tree-node-content-wrapper:hover,
-.dark-theme .ant-tree-select-dropdown .ant-select-tree-node-selected.ant-select-tree-node-checked:hover,
 .dark-theme .ant-tree-select-dropdown .ant-select-tree-node-selected.ant-select-tree-node-checked .ant-select-tree-node-content-wrapper:hover {
   background: var(--bg-tertiary) !important;
   color: var(--text-color) !important;
@@ -753,46 +721,23 @@ code {
   color: var(--text-color) !important;
 }
 
-/* 带颜色的Tag在暗黑模式下的文字颜色 */
-.dark-theme .ant-tag.ant-tag-blue,
-.dark-theme .ant-tag.ant-tag-cyan,
-.dark-theme .ant-tag.ant-tag-geekblue {
+/* 带颜色的Tag在暗黑模式下的文字颜色 - 仅保留项目中使用的颜色 */
+.dark-theme .ant-tag.ant-tag-blue {
   background: rgba(64, 169, 255, 0.2) !important;
   border-color: #40a9ff !important;
   color: #69c0ff !important;
 }
 
-.dark-theme .ant-tag.ant-tag-green,
-.dark-theme .ant-tag.ant-tag-lime {
+.dark-theme .ant-tag.ant-tag-green {
   background: rgba(82, 196, 26, 0.2) !important;
   border-color: #52c41a !important;
   color: #73d13d !important;
 }
 
-.dark-theme .ant-tag.ant-tag-red,
-.dark-theme .ant-tag.ant-tag-volcano,
-.dark-theme .ant-tag.ant-tag-magenta {
+.dark-theme .ant-tag.ant-tag-red {
   background: rgba(255, 77, 79, 0.2) !important;
   border-color: #ff4d4f !important;
   color: #ff7875 !important;
-}
-
-.dark-theme .ant-tag.ant-tag-orange {
-  background: rgba(255, 122, 69, 0.2) !important;
-  border-color: #ff7a45 !important;
-  color: #ff9c6e !important;
-}
-
-.dark-theme .ant-tag.ant-tag-gold {
-  background: rgba(250, 173, 20, 0.2) !important;
-  border-color: #faad14 !important;
-  color: #ffc53d !important;
-}
-
-.dark-theme .ant-tag.ant-tag-purple {
-  background: rgba(135, 92, 246, 0.2) !important;
-  border-color: #8758f6 !important;
-  color: #b37feb !important;
 }
 
 /* Tag 内的文字和图标 */
