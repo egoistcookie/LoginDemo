@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Table, Button, message, Typography, Form, Select, DatePicker, Input, Space } from 'antd';
 import { ReloadOutlined, SearchOutlined } from '@ant-design/icons';
 import { useTheme } from '../context/ThemeContext';
@@ -19,6 +19,11 @@ const AuditLogPage = () => {
     current: 1,
     pageSize: 10,
   });
+  // 使用 ref 存储最新的 pagination，避免依赖循环
+  const paginationRef = useRef(pagination);
+  useEffect(() => {
+    paginationRef.current = pagination;
+  }, [pagination]);
 
   // 获取操作类型列表
   useEffect(() => {
@@ -45,6 +50,8 @@ const AuditLogPage = () => {
       const token = localStorage.getItem('accessToken');
       const values = form.getFieldsValue();
       
+      // 使用 ref 获取最新的 pagination，避免依赖循环
+      const currentPagination = paginationRef.current;
       const queryParams = {
         userId: values.userId || null,
         username: values.username || null,
@@ -56,9 +63,8 @@ const AuditLogPage = () => {
         endTime: values.timeRange && values.timeRange[1] 
           ? values.timeRange[1].format('YYYY-MM-DD HH:mm:ss') 
           : null,
-        page: pagination.current,
-        pageSize: pagination.pageSize,
-        ...params
+        page: params.page !== undefined ? params.page : currentPagination.current,
+        pageSize: params.pageSize !== undefined ? params.pageSize : currentPagination.pageSize,
       };
 
       const response = await axios.post('/audit-logs/query', queryParams, {
@@ -68,7 +74,8 @@ const AuditLogPage = () => {
       if (response.data.code === 200) {
         setLogs(response.data.data.list || []);
         setTotal(response.data.data.total || 0);
-        if (response.data.data.page) {
+        // 只在返回的页码与当前不同时更新
+        if (response.data.data.page && response.data.data.page !== currentPagination.current) {
           setPagination(prev => ({
             ...prev,
             current: response.data.data.page
@@ -82,33 +89,43 @@ const AuditLogPage = () => {
     } finally {
       setLoading(false);
     }
-  }, [form, pagination]);
+  }, [form]);
 
-  // 初始加载
+  // 初始加载 - 只在组件挂载时执行一次
   useEffect(() => {
     fetchAuditLogs();
-  }, [fetchAuditLogs]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // 处理搜索
   const handleSearch = () => {
-    setPagination(prev => ({ ...prev, current: 1 }));
+    const newPagination = { ...paginationRef.current, current: 1 };
+    paginationRef.current = newPagination;
+    setPagination(newPagination);
     fetchAuditLogs({ page: 1 });
   };
 
   // 处理重置
   const handleReset = () => {
     form.resetFields();
-    setPagination({ current: 1, pageSize: 10 });
-    setTimeout(() => {
-      fetchAuditLogs({ page: 1 });
-    }, 0);
+    const newPagination = { current: 1, pageSize: 10 };
+    paginationRef.current = newPagination;
+    setPagination(newPagination);
+    fetchAuditLogs({ page: 1 });
   };
 
   // 处理分页变化
   const handleTableChange = (newPagination) => {
-    setPagination({
+    const updatedPagination = {
       current: newPagination.current,
       pageSize: newPagination.pageSize,
+    };
+    paginationRef.current = updatedPagination;
+    setPagination(updatedPagination);
+    // 分页变化时重新加载数据
+    fetchAuditLogs({
+      page: newPagination.current,
+      pageSize: newPagination.pageSize
     });
   };
 
