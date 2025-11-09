@@ -72,7 +72,7 @@ class TokenManager {
       }
 
       // 使用动态导入避免循环依赖
-      const {default: api} = await import('../api');
+      const {default: api} = await import('../api/index');
       const response = await api.post('/auth/refresh', null, {
         params: {refreshToken},
       });

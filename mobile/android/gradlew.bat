@@ -65,12 +65,21 @@ echo location of your Java installation.
 goto fail
 
 :execute
-@rem Setup the command line
+@rem Use local Gradle installation if available
+set GRADLE_HOME=D:\gradle-9.2.0
+set GRADLE_EXE=%GRADLE_HOME%\bin\gradle.bat
 
+@rem Check if we have Gradle 8.5 or compatible version
+@rem For now, fallback to wrapper for compatibility
+@rem if exist "%GRADLE_EXE%" (
+@rem     call "%GRADLE_EXE%" %*
+@rem     goto end
+@rem )
+
+@rem Setup the command line for wrapper
 set CLASSPATH=%APP_HOME%\gradle\wrapper\gradle-wrapper.jar
 
-
-@rem Execute Gradle
+@rem Execute Gradle using wrapper
 "%JAVA_EXE%" %DEFAULT_JVM_OPTS% %JAVA_OPTS% %GRADLE_OPTS% "-Dorg.gradle.appname=%APP_BASE_NAME%" -classpath "%CLASSPATH%" org.gradle.wrapper.GradleWrapperMain %*
 
 :end

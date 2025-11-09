@@ -8,10 +8,10 @@
    - 或点击工具栏的 AVD Manager 图标
 3. **创建虚拟设备**
    - 点击 `Create Device` 按钮
-   - 选择设备型号（推荐：Pixel 5 或 Pixel 6）
+   - 选择设备型号（推荐：**Pixel 6**）
    - 点击 `Next`
 4. **选择系统镜像**
-   - 选择一个已下载的系统镜像（推荐：API 33 或 API 34）
+   - 选择一个已下载的系统镜像（推荐：**API 34** - Android 14）
    - 如果没有，点击 `Download` 下载
    - 点击 `Next`
 5. **配置设备**
@@ -27,15 +27,17 @@
 # 1. 列出可用的系统镜像
 sdkmanager --list | Select-String "system-images"
 
-# 2. 安装系统镜像（例如：Android 13）
-sdkmanager "system-images;android-33;google_apis;x86_64"
+# 2. 安装系统镜像（推荐：Android 14 API 34，arm64-v8a 架构）
+sdkmanager "system-images;android-34;google_apis;arm64-v8a"
 
-# 3. 创建模拟器
-avdmanager create avd -n "Pixel_5_API_33" -k "system-images;android-33;google_apis;x86_64"
+# 3. 创建模拟器（推荐：Pixel 6 API 34）
+avdmanager create avd -n "Pixel_6_API_34" -k "system-images;android-34;google_apis;arm64-v8a" -d "pixel_6"
 
 # 4. 启动模拟器
-emulator -avd Pixel_5_API_33
+emulator -avd Pixel_6_API_34
 ```
+
+**注意**: 本项目推荐使用 arm64-v8a 架构，与项目配置的 `reactNativeArchitectures=arm64-v8a` 保持一致。
 
 ## 验证模拟器
 

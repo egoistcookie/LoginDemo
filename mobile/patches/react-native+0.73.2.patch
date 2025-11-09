@@ -1,0 +1,21 @@
+diff --git a/node_modules/react-native/ReactAndroid/src/main/java/com/facebook/react/uimanager/ViewManagerWithGeneratedInterface.java b/node_modules/react-native/ReactAndroid/src/main/java/com/facebook/react/uimanager/ViewManagerWithGeneratedInterface.java
+new file mode 100644
+index 0000000..c69743b
+--- /dev/null
++++ b/node_modules/react-native/ReactAndroid/src/main/java/com/facebook/react/uimanager/ViewManagerWithGeneratedInterface.java
+@@ -0,0 +1,15 @@
++/*
++ * Compatibility interface for React Native 0.73.2
++ * ViewManagerWithGeneratedInterface is part of New Architecture but may not be available
++ * when newArchEnabled=false. This provides a compatibility layer.
++ */
++package com.facebook.react.uimanager;
++
++/**
++ * Compatibility interface for ViewManagerWithGeneratedInterface
++ * This is a marker interface used by codegen for New Architecture components
++ */
++public interface ViewManagerWithGeneratedInterface {
++    // Marker interface - no methods required
++}
++

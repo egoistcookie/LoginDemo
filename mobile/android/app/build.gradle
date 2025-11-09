@@ -3,6 +3,10 @@ apply plugin: "com.facebook.react"
 
 import com.android.build.OutputFile
 
+// Apply native modules autolinking - required for React Native 0.73+
+// Excluding gesture-handler and screens via react-native.config.js to avoid BaseReactPackage errors
+apply from: file("../../node_modules/@react-native-community/cli-platform-android/native_modules.gradle"); applyNativeModulesAppBuildGradle(project)
+
 /**
  * This is the configuration block to customize your React Native Android app.
  * By default you don't need to apply any configuration, just uncomment the lines you need.
@@ -90,7 +94,20 @@ android {
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1
         versionName "1.0"
+        // Ensure 16KB page size compatibility
+        // Optimized for Pixel 6 API 34 (arm64-v8a architecture)
+        ndk {
+            abiFilters 'arm64-v8a'
+        }
     }
+    
+    // Enable 16KB page size support for Android 15+
+    packaging {
+        jniLibs {
+            useLegacyPackaging = false
+        }
+    }
+    
     signingConfigs {
         debug {
             storeFile file('debug.keystore')
@@ -113,6 +130,13 @@ android {
     }
 }
 
+configurations.all {
+    resolutionStrategy {
+        force("androidx.core:core:1.12.0")
+        force("androidx.core:core-ktx:1.12.0")
+    }
+}
+
 dependencies {
     // The version of react-native is set by the React Native Gradle Plugin
     implementation("com.facebook.react:react-android")
@@ -122,5 +146,9 @@ dependencies {
     } else {
         implementation jscFlavor
     }
+    
+    // Force compatible versions of androidx.core to avoid version conflicts
+    implementation("androidx.core:core:1.12.0")
+    implementation("androidx.core:core-ktx:1.12.0")
 }
 

@@ -20,19 +20,25 @@ const AppNavigator = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
+  console.log('AppNavigator rendering, isLoading:', isLoading, 'isAuthenticated:', isAuthenticated);
+
   useEffect(() => {
+    console.log('AppNavigator useEffect triggered, checking auth status...');
     // 检查登录状态
     checkAuthStatus();
   }, []);
 
   const checkAuthStatus = async () => {
     try {
+      console.log('Checking auth status...');
       const authenticated = await AuthService.isAuthenticated();
+      console.log('Auth status result:', authenticated);
       setIsAuthenticated(authenticated);
     } catch (error) {
       console.error('检查登录状态失败:', error);
       setIsAuthenticated(false);
     } finally {
+      console.log('Auth check completed, setting loading to false');
       setIsLoading(false);
     }
   };
@@ -44,6 +50,7 @@ const AppNavigator = () => {
 
   // 显示加载状态
   if (isLoading) {
+    console.log('Showing loading screen...');
     return (
       <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" color="#1890ff" />
@@ -52,16 +59,23 @@ const AppNavigator = () => {
     );
   }
 
+  console.log('Rendering navigation, isAuthenticated:', isAuthenticated);
   return (
     <NavigationContainer ref={navigationRef}>
       <Stack.Navigator screenOptions={{headerShown: false}}>
         {isAuthenticated ? (
           <Stack.Screen name="Profile">
-            {props => <ProfileScreen {...props} updateAuthState={updateAuthState} />}
+            {props => {
+              console.log('Rendering ProfileScreen');
+              return <ProfileScreen {...props} updateAuthState={updateAuthState} />;
+            }}
           </Stack.Screen>
         ) : (
           <Stack.Screen name="Login">
-            {props => <LoginScreen {...props} updateAuthState={updateAuthState} />}
+            {props => {
+              console.log('Rendering LoginScreen');
+              return <LoginScreen {...props} updateAuthState={updateAuthState} />;
+            }}
           </Stack.Screen>
         )}
       </Stack.Navigator>
