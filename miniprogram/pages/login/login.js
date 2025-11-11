@@ -112,7 +112,7 @@ Page({
         title: '登录成功',
         icon: 'success',
         duration: 1500,
-      });
+      }); 
 
       // 跳转到用户信息页
       setTimeout(() => {
@@ -121,10 +121,36 @@ Page({
         });
       }, 1500);
     } catch (error) {
+      // 提取错误信息，优先使用从API返回的详细错误信息
+      let errorMessage = '登录失败，请重试';
+      
+      // 优先使用 error.message（API返回的详细错误信息）
+      if (error?.message) {
+        errorMessage = error.message;
+      } 
+      // 如果响应数据中有message字段，也尝试使用
+      else if (error?.responseData?.message) {
+        errorMessage = error.responseData.message;
+      }
+      // 兼容其他错误格式
+      else if (error?.errMsg) {
+        errorMessage = error.errMsg;
+      } 
+      else if (typeof error === 'string') {
+        errorMessage = error;
+      }
+      
       console.error('登录失败:', error);
+      console.error('错误详情:', {
+        message: error?.message,
+        responseData: error?.responseData,
+        statusCode: error?.statusCode,
+        errMsg: error?.errMsg,
+      });
+      
       this.setData({
         loading: false,
-        errorMessage: error.message || '登录失败，请重试',
+        errorMessage: errorMessage,
       });
     }
   },

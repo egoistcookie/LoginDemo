@@ -89,14 +89,27 @@ export const request = (options) => {
           });
           reject(new Error('未授权'));
         } else {
-          // 其他HTTP错误
-          const errorMsg = `请求失败 (${res.statusCode})`;
+          // 其他HTTP错误，尝试提取响应体中的详细错误信息
+          let errorMsg = `请求失败 (${res.statusCode})`;
+          // 如果响应体中有message字段，使用它作为错误信息
+          if (res.data && res.data.message) {
+            errorMsg = res.data.message;
+          } else if (res.data && typeof res.data === 'string') {
+            // 如果响应体是字符串，直接使用
+            errorMsg = res.data;
+          }
+          
           wx.showToast({
             title: errorMsg,
             icon: 'none',
             duration: 2000,
           });
-          reject(new Error(errorMsg));
+          
+          // 创建错误对象，保留完整的响应信息以便调试
+          const error = new Error(errorMsg);
+          error.statusCode = res.statusCode;
+          error.responseData = res.data;
+          reject(error);
         }
       },
       fail: (error) => {
@@ -104,11 +117,13 @@ export const request = (options) => {
         console.error('请求失败:', error);
         
         let errorMsg = '网络请求失败';
-        if (error.errMsg) {
+        if (error && error.errMsg) {
           if (error.errMsg.includes('timeout')) {
             errorMsg = '请求超时，请检查网络连接';
           } else if (error.errMsg.includes('fail')) {
             errorMsg = '网络连接失败，请检查网络设置';
+          } else {
+            errorMsg = error.errMsg;
           }
         }
         
@@ -117,7 +132,14 @@ export const request = (options) => {
           icon: 'none',
           duration: 2000,
         });
-        reject(error);
+        // 创建标准的Error对象，确保调试器可以正确识别
+        const err = new Error(errorMsg);
+        // 保留原始错误信息
+        if (error) {
+          err.originalError = error;
+          err.errMsg = error.errMsg;
+        }
+        reject(err);
       },
     });
   });

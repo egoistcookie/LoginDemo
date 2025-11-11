@@ -189,7 +189,7 @@ public class UserServiceImpl implements UserService {
         if (requiresCaptcha) {
             // 如果需要验证码，验证验证码
             if (request.getCaptchaKey() == null || request.getCaptchaCode() == null) {
-                throw new BusinessException("请输入验证码");
+                throw new BusinessException("密码错误次数大于3次，请输入验证码");
             }
             if (!captchaService.validateCaptcha(request.getCaptchaKey(), request.getCaptchaCode())) {
                 // 验证码错误，记录失败次数
@@ -206,9 +206,9 @@ public class UserServiceImpl implements UserService {
             // 记录审计日志
             auditLogService.logFailure("LOGIN", "用户登录失败：用户不存在", 
                 null, username, httpRequestUtils.getClientIp(), 
-                httpRequestUtils.getUserAgent(), "用户名或密码错误",
+                httpRequestUtils.getUserAgent(), "用户不存在",
                 httpRequestUtils.getRequestMethod(), httpRequestUtils.getRequestPath());
-            throw new BusinessException("用户名或密码错误");
+            throw new BusinessException("用户不存在");
         }
 
         // 检查用户状态
@@ -227,9 +227,9 @@ public class UserServiceImpl implements UserService {
             // 记录审计日志
             auditLogService.logFailure("LOGIN", "用户登录失败：密码错误", 
                 user.getId(), username, httpRequestUtils.getClientIp(), 
-                httpRequestUtils.getUserAgent(), "用户名或密码错误",
+                httpRequestUtils.getUserAgent(), "密码错误",
                 httpRequestUtils.getRequestMethod(), httpRequestUtils.getRequestPath());
-            throw new BusinessException("用户名或密码错误");
+            throw new BusinessException("密码错误");
         }
 
         // 清除登录失败记录

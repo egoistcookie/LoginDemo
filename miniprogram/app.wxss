@@ -55,6 +55,8 @@
   border: 1rpx solid #ddd;
   border-radius: 8rpx;
   font-size: 32rpx;
+  line-height: 1.5;
+  min-height: 88rpx;
   background-color: #fff;
   box-sizing: border-box;
 }
