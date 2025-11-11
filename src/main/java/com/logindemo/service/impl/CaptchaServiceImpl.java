@@ -42,9 +42,9 @@ public class CaptchaServiceImpl implements CaptchaService {
     private int captchaExpireTime;
 
     /**
-     * 需要验证码的失败次数阈值，默认2次
+     * 需要验证码的失败次数阈值，默认3次
      */
-    @Value("${captcha.require-threshold:2}")
+    @Value("${captcha.require-threshold:3}")
     private int requireThreshold;
 
     @Override
