@@ -1,0 +1,53 @@
+<!-- 登录页面 -->
+<view class="container">
+  <view class="login-container">
+    <view class="login-header">
+      <text class="login-title">欢迎登录</text>
+      <text class="login-subtitle">LoginDemo 小程序</text>
+    </view>
+
+    <view class="login-form">
+      <!-- 用户名输入 -->
+      <view class="input-group">
+        <text class="input-label">用户名</text>
+        <input
+          class="input"
+          type="text"
+          placeholder="请输入用户名"
+          value="{{username}}"
+          bindinput="onUsernameInput"
+          disabled="{{loading}}"
+        />
+      </view>
+
+      <!-- 密码输入 -->
+      <view class="input-group">
+        <text class="input-label">密码</text>
+        <input
+          class="input"
+          type="password"
+          placeholder="请输入密码"
+          value="{{password}}"
+          bindinput="onPasswordInput"
+          disabled="{{loading}}"
+        />
+      </view>
+
+      <!-- 错误提示 -->
+      <view class="error-message" wx:if="{{errorMessage}}">
+        <text class="text-error">{{errorMessage}}</text>
+      </view>
+
+      <!-- 登录按钮 -->
+      <button
+        class="btn btn-primary"
+        bindtap="handleLogin"
+        disabled="{{loading}}"
+        loading="{{loading}}"
+      >
+        {{loading ? '登录中...' : '登录'}}
+      </button>
+    </view>
+  </view>
+</view>
+
