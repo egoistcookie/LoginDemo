@@ -10,10 +10,27 @@ server:
 spring:
   # 数据库配置
   datasource:
-    url: jdbc:mysql://localhost:3306/login_demo?useUnicode=true&characterEncoding=utf-8&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Shanghai
-    username: root
-    password: qq7816288
+    # 本地开发环境
+    # url: jdbc:mysql://localhost:3306/login_demo?useUnicode=true&characterEncoding=utf-8&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Shanghai
+    # username: logindemo
+    # password: qq7816288
+    # 云服务器环境
+    url: jdbc:mysql://120.77.92.36:3306/login_demo?useUnicode=true&characterEncoding=utf-8&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Shanghai
+    username: logindemo
+    password: Srcb@2025
     driver-class-name: com.mysql.cj.jdbc.Driver
+    # HikariCP 连接池配置 (Spring Boot 2.x 及以上默认使用HikariCP)[6,8](@ref)
+    hikari:
+      # 连接池最大连接数，默认10[6,8](@ref)
+      maximum-pool-size: 10
+      # 空闲连接存活最大时间（毫秒），默认600000（10分钟）[6](@ref)
+      idle-timeout: 180000
+      # 连接最大生命周期（毫秒），默认1800000（30分钟）[6](@ref)
+      max-lifetime: 1800000
+      # 数据库连接超时时间（毫秒），默认30000（30秒）[6](@ref)
+      connection-timeout: 30000
+      # 用于验证连接是否有效的SQL查询，例如 SELECT 1[6](@ref)
+      connection-test-query: SELECT 1
 
   # Redis配置
   redis:
@@ -21,7 +38,8 @@ spring:
     port: 6379
     database: 0
     timeout: 10000ms
-    password: 
+    #password: 本地开发环境不需要密码
+    password: Srcb@2025
     lettuce:
       pool:
         enabled: false

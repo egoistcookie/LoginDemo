@@ -6,15 +6,21 @@ import ForgotPasswordPage from './pages/ForgotPasswordPage';
 import MainPage from './pages/MainPage';
 import { ThemeProvider } from './context/ThemeContext';
 import axios from 'axios';
+import config from './config';
 
 // 设置axios基础配置
-axios.defaults.baseURL = '/api';
+axios.defaults.baseURL = config.API_BASE_URL;
 axios.defaults.headers.post['Content-Type'] = 'application/json';
 
-// 请求拦截器，添加Token
+// 添加超时配置和重试逻辑
+axios.defaults.timeout = 30000; // 30秒超时
+
+// 请求拦截器，添加Token并记录请求信息
 axios.interceptors.request.use(config => {
+  console.log('发送请求:', config.method?.toUpperCase(), config.url);
   const token = localStorage.getItem('accessToken');
   if (token) {
+    console.log('包含Authorization头');
     config.headers['Authorization'] = `Bearer ${token}`;
   }
   return config;

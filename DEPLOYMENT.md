@@ -138,12 +138,12 @@ mysql -u root -p
 CREATE DATABASE login_demo CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 -- 创建用户并授权（推荐使用专用用户，而非 root）
-CREATE USER 'logindemo'@'localhost' IDENTIFIED BY 'your_secure_password';
+CREATE USER 'logindemo'@'localhost' IDENTIFIED BY 'Srcb@2025';
 GRANT ALL PRIVILEGES ON login_demo.* TO 'logindemo'@'localhost';
 FLUSH PRIVILEGES;
 
 -- 如果需要远程连接（不推荐生产环境）
-CREATE USER 'logindemo'@'%' IDENTIFIED BY 'your_secure_password';
+CREATE USER 'logindemo'@'%' IDENTIFIED BY 'Srcb@2025';
 GRANT ALL PRIVILEGES ON login_demo.* TO 'logindemo'@'%';
 FLUSH PRIVILEGES;
 
@@ -197,6 +197,7 @@ sudo systemctl enable redis
 
 # 验证 Redis 运行状态
 redis-cli ping
+# PONG 即正常
 ```
 
 #### Redis 安全配置
@@ -208,7 +209,7 @@ sudo vi /etc/redis/redis.conf
 sudo vi /etc/redis.conf
 
 # 设置密码（取消注释并修改）
-requirepass your_redis_password
+requirepass Srcb@2025
 
 # 绑定到本地（生产环境推荐）
 bind 127.0.0.1
@@ -219,7 +220,7 @@ sudo systemctl restart redis-server
 sudo systemctl restart redis
 
 # 测试连接（需要密码）
-redis-cli -a your_redis_password ping
+redis-cli -a Srcb@2025 ping
 ```
 
 ### 4. 防火墙端口配置
@@ -669,15 +670,15 @@ sudo systemctl status redis
 #### 2. 测试 Redis 连接
 
 ```bash
-redis-cli -a your_redis_password ping
+redis-cli -a Srcb@2025 ping
 ```
 
 #### 3. 检查 Redis 配置
 
 ```bash
 # 查看 Redis 配置
-redis-cli -a your_redis_password CONFIG GET requirepass
-redis-cli -a your_redis_password CONFIG GET bind
+redis-cli -a Srcb@2025 CONFIG GET requirepass
+redis-cli -a Srcb@2025 CONFIG GET bind
 ```
 
 ### 端口占用问题

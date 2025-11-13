@@ -1,0 +1,38 @@
+[Unit]
+Description=LoginDemo Spring Boot Application
+After=network.target mysql.service redis.service
+
+[Service]
+Type=simple
+User=logindemo
+Group=logindemo
+WorkingDirectory=/opt/logindemo
+
+# JAR 文件路径
+ExecStart=/usr/bin/java -jar /opt/logindemo/login-service-1.0.0.jar \
+  --spring.config.location=classpath:/application.yml,file:/opt/logindemo/config/application-prod.yml \
+  --spring.profiles.active=prod
+
+# JVM 参数配置（根据服务器配置调整）
+Environment="JAVA_OPTS=-Xms512m -Xmx1024m -XX:+UseG1GC -XX:MaxGCPauseMillis=200"
+
+# 日志配置
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=login-service
+
+# 重启策略
+Restart=always
+RestartSec=10
+
+# 安全配置
+NoNewPrivileges=true
+PrivateTmp=true
+
+# 资源限制（可选）
+# LimitNOFILE=65536
+# LimitNPROC=4096
+
+[Install]
+WantedBy=multi-user.target
+

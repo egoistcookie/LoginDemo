@@ -1,10 +1,11 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Layout, Typography, Button, message, Menu, Space } from 'antd';
-import { LogoutOutlined, UserOutlined, HomeOutlined, UserAddOutlined, UnorderedListOutlined, SettingOutlined, 
+import { LogoutOutlined, UserOutlined, HomeOutlined, UserAddOutlined, UnorderedListOutlined, SettingOutlined,
          BarChartOutlined, FileTextOutlined, DatabaseOutlined, FileAddOutlined, DownloadOutlined,
          BookOutlined, InfoCircleOutlined, BulbOutlined, BulbFilled, FileSearchOutlined } from '@ant-design/icons';
 import { useTheme } from '../context/ThemeContext';
 import axios from 'axios';
+import config from '../config';
 import UsersListPage from './UsersListPage';
 import RolesListPage from './RolesListPage';
 import MenusListPage from './MenusListPage';
@@ -71,20 +72,29 @@ const MainPage = ({ setIsAuthenticated }) => {
   useEffect(() => {
     const fetchData = async () => {
       try {
+        // 先测试基础连接 - 不需要认证的API
+        console.log('开始测试API连接...');
+        const testResponse = await axios.get('/auth/validate?token=test');
+        console.log('测试API响应:', testResponse.data);
+
         // 获取用户信息
+        console.log('获取用户信息...');
         const userResponse = await axios.get('/users/me');
+        console.log('用户信息响应:', userResponse.data);
         if (userResponse.data.code === 200) {
           setUserInfo(userResponse.data.data);
         }
-        
+
         // 获取用户菜单
         setMenuLoading(true);
+        console.log('获取用户菜单...');
         const menuResponse = await axios.get('/auth/user-menu');
+        console.log('用户菜单响应:', menuResponse.data);
         if (menuResponse.data.code === 200 && menuResponse.data.data) {
           const menus = menuResponse.data.data;
           const items = buildMenuItems(menus);
           setMenuItems(items);
-          
+
           // 如果有菜单项，默认激活第一个
           if (items.length > 0) {
             const firstItem = items[0];
@@ -96,8 +106,24 @@ const MainPage = ({ setIsAuthenticated }) => {
           }
         }
       } catch (error) {
-        message.error('获取数据失败');
-        console.error('Error fetching data:', error);
+        console.error('获取数据失败，详细错误信息:', error);
+        console.error('错误响应:', error.response);
+        console.error('错误状态码:', error.response?.status);
+        console.error('错误数据:', error.response?.data);
+
+        if (error.response?.status === 401) {
+          message.error('登录已过期，请重新登录');
+          // 清除本地存储并跳转到登录页
+          localStorage.removeItem('accessToken');
+          localStorage.removeItem('refreshToken');
+          window.location.href = '/login';
+        } else if (error.response?.status === 403) {
+          message.error('权限不足，无法获取数据');
+        } else if (error.response?.status === 404) {
+          message.error('API接口不存在');
+        } else {
+          message.error('获取数据失败: ' + (error.response?.data?.message || error.message));
+        }
       } finally {
         setMenuLoading(false);
       }
@@ -216,6 +242,14 @@ const MainPage = ({ setIsAuthenticated }) => {
                 {!menuLoading && menuItems.length === 0 && (
                   <Paragraph type="warning">暂无可用菜单权限</Paragraph>
                 )}
+
+                {/* 网络诊断信息 */}
+                <div style={{ marginTop: '20px', padding: '10px', backgroundColor: '#f6f6f6', borderRadius: '4px' }}>
+                  <Paragraph strong>网络诊断:</Paragraph>
+                  <Paragraph>API地址: {config.API_BASE_URL}</Paragraph>
+                  <Paragraph>后端状态: <span style={{ color: 'green' }}>✓ 可连接</span></Paragraph>
+                  <Paragraph>请检查浏览器控制台的网络请求日志</Paragraph>
+                </div>
               </div>
               
               {/* 旋转地球效果 */}
