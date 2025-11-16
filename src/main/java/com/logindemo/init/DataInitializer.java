@@ -57,6 +57,8 @@ public class DataInitializer implements ApplicationRunner {
             saveMenuIfNotExists(createRolesListMenu());
             saveMenuIfNotExists(createRolesAddMenu());
             saveMenuIfNotExists(createRolesPermissionsMenu());
+            saveMenuIfNotExists(createNotesMenu());
+            saveMenuIfNotExists(createNotesListMenu());
             System.out.println("菜单数据初始化完成");
         } catch (Exception e) {
             System.err.println("菜单数据初始化失败：");
@@ -69,16 +71,34 @@ public class DataInitializer implements ApplicationRunner {
      */
     private void saveMenuIfNotExists(Menu menu) {
         try {
-            // 检查菜单是否已存在
-            Menu existing = menuService.getById(menu.getId());
-            if (existing == null) {
-                menuService.save(menu);
-                System.out.println("保存菜单: " + menu.getName());
+            // 先通过ID检查菜单是否已存在
+            Menu existingById = menuService.getById(menu.getId());
+            if (existingById != null) {
+                System.out.println("菜单已存在（通过ID）: " + menu.getName());
+                return;
+            }
+            
+            // 再通过key_path检查菜单是否已存在（避免唯一约束冲突）
+            com.baomidou.mybatisplus.core.conditions.query.QueryWrapper<Menu> queryWrapper = 
+                new com.baomidou.mybatisplus.core.conditions.query.QueryWrapper<>();
+            queryWrapper.eq("key_path", menu.getKeyPath());
+            Menu existingByKeyPath = menuService.getOne(queryWrapper);
+            if (existingByKeyPath != null) {
+                System.out.println("菜单已存在（通过key_path）: " + menu.getName() + ", 已存在的ID: " + existingByKeyPath.getId());
+                return;
+            }
+            
+            // 菜单不存在，执行保存
+            boolean saved = menuService.save(menu);
+            if (saved) {
+                System.out.println("保存菜单成功: " + menu.getName() + " (ID: " + menu.getId() + ")");
             } else {
-                System.out.println("菜单已存在: " + menu.getName());
+                System.err.println("保存菜单返回false: " + menu.getName());
             }
         } catch (Exception e) {
             System.err.println("保存菜单失败: " + menu.getName());
+            System.err.println("菜单ID: " + menu.getId() + ", Key: " + menu.getKey() + ", KeyPath: " + menu.getKeyPath());
+            e.printStackTrace();
             // 继续尝试其他菜单，不中断整个初始化过程
         }
     }
@@ -252,6 +272,36 @@ public class DataInitializer implements ApplicationRunner {
         return menu;
     }
     
+    private Menu createNotesMenu() {
+        Menu menu = new Menu();
+        menu.setId(26L);
+        menu.setParentId(0L);
+        menu.setName("笔记管理");
+        menu.setKey("notes");
+        menu.setKeyPath("notes");
+        menu.setSortOrder(6);
+        menu.setPath("/notes");
+        menu.setComponent("Notes");
+        menu.setIcon("EditOutlined");
+        menu.setVisible(true);
+        return menu;
+    }
+    
+    private Menu createNotesListMenu() {
+        Menu menu = new Menu();
+        menu.setId(27L);
+        menu.setParentId(26L);
+        menu.setName("笔记列表");
+        menu.setKey("notes-list");
+        menu.setKeyPath("notes-list");
+        menu.setSortOrder(1);
+        menu.setPath("/notes/list");
+        menu.setComponent("NotesList");
+        menu.setIcon("EditOutlined");
+        menu.setVisible(true);
+        return menu;
+    }
+    
     /**
      * 初始化角色菜单权限
      */
@@ -269,24 +319,30 @@ public class DataInitializer implements ApplicationRunner {
             }
             
             if (!hasData) {
-                // SYSTEM角色（ID为1）拥有全部菜单权限
+                // SYSTEM角色（ID为3，根据init_ddm.sql）拥有全部菜单权限（6-25的现有菜单 + 26-27的笔记菜单）
                 List<Long> allMenuIds = new ArrayList<>();
-                for (long i = 1; i <= 12; i++) {
+                // 添加现有菜单ID（6-25）
+                for (long i = 6; i <= 25; i++) {
                     allMenuIds.add(i);
                 }
+                // 添加笔记菜单ID（26-27）
+                allMenuIds.add(26L);
+                allMenuIds.add(27L);
                 try {
-                    roleMenuService.assignMenusToRole(1L, allMenuIds);
+                    roleMenuService.assignMenusToRole(3L, allMenuIds);
                     System.out.println("已为SYSTEM角色分配全部菜单权限");
                 } catch (Exception e) {
                     System.err.println("为SYSTEM角色分配权限失败");
                 }
                 
-                // USER角色（ID为2）只拥有用户列表菜单权限
+                // USER角色（ID为1，根据init_ddm.sql）拥有用户列表和笔记列表菜单权限
                 List<Long> userMenuIds = new ArrayList<>();
-                userMenuIds.add(6L); // 用户列表菜单ID
+                userMenuIds.add(14L); // 用户列表菜单ID
+                userMenuIds.add(26L); // 笔记管理菜单ID
+                userMenuIds.add(27L); // 笔记列表菜单ID
                 try {
-                    roleMenuService.assignMenusToRole(2L, userMenuIds);
-                    System.out.println("已为USER角色分配用户列表菜单权限");
+                    roleMenuService.assignMenusToRole(1L, userMenuIds);
+                    System.out.println("已为USER角色分配用户列表和笔记列表菜单权限");
                 } catch (Exception e) {
                     System.err.println("为USER角色分配权限失败");
                 }

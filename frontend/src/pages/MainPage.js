@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { Layout, Typography, Button, message, Menu, Space } from 'antd';
 import { LogoutOutlined, UserOutlined, HomeOutlined, UserAddOutlined, UnorderedListOutlined, SettingOutlined,
          BarChartOutlined, FileTextOutlined, DatabaseOutlined, FileAddOutlined, DownloadOutlined,
-         BookOutlined, InfoCircleOutlined, BulbOutlined, BulbFilled, FileSearchOutlined } from '@ant-design/icons';
+         BookOutlined, InfoCircleOutlined, BulbOutlined, BulbFilled, FileSearchOutlined, EditOutlined } from '@ant-design/icons';
 import { useTheme } from '../context/ThemeContext';
 import axios from 'axios';
 import config from '../config';
@@ -10,6 +10,7 @@ import UsersListPage from './UsersListPage';
 import RolesListPage from './RolesListPage';
 import MenusListPage from './MenusListPage';
 import AuditLogPage from './AuditLogPage';
+import NotesListPage from './NotesListPage';
 
 const { Header, Content, Sider } = Layout;
 const { Title, Paragraph } = Typography;
@@ -46,7 +47,9 @@ const MainPage = ({ setIsAuthenticated }) => {
       'settings': <SettingOutlined />,
       'help': <BookOutlined />,
       'about': <InfoCircleOutlined />,
-      'audit-logs': <FileSearchOutlined />
+      'audit-logs': <FileSearchOutlined />,
+      'notes': <EditOutlined />,
+      'notes-list': <EditOutlined />
     };
     return iconMap[menuKey] || <UnorderedListOutlined />;
   }, []);
@@ -230,6 +233,8 @@ const MainPage = ({ setIsAuthenticated }) => {
             <MenusListPage />
           ) : activePage === 'audit-logs' ? (
             <AuditLogPage />
+          ) : activePage === 'notes-list' ? (
+            <NotesListPage />
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '30px' }}>
               <Title level={2}>

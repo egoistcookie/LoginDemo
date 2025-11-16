@@ -28,6 +28,9 @@ public class Menu implements Serializable {
     @TableField(value = "`key`")
     private String key;
     
+    @TableField("key_path")
+    private String keyPath; // 菜单路径标识
+    
     private String path;
     
     private String component;
