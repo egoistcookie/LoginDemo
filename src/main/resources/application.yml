@@ -34,15 +34,14 @@ spring:
 
   # Redis配置
   redis:
-    host: localhost
+    host: 127.0.0.1
     port: 6379
     database: 0
     timeout: 10000ms
-    #password: 本地开发环境不需要密码
-    password: Srcb@2025
+    # password: Srcb@2025  # 本地开发环境注释掉密码配置
     lettuce:
       pool:
-        enabled: false
+        enabled: false  # 本地开发环境关闭连接池，避免连接问题
     connect-timeout: 5000
 
   # 安全配置
