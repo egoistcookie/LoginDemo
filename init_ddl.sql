@@ -46,7 +46,7 @@ CREATE TABLE `menus` (
   KEY `idx_sort_order` (`sort_order`),
   KEY `idx_visible` (`visible`),
   KEY `idx_key` (`key`)
-) ENGINE=InnoDB AUTO_INCREMENT=26 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='菜单表';
+) ENGINE=InnoDB AUTO_INCREMENT=15 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='菜单表';
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --

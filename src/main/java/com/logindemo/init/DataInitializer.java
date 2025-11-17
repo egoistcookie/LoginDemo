@@ -110,6 +110,7 @@ public class DataInitializer implements ApplicationRunner {
         menu.setParentId(0L);
         menu.setName("首页");
         menu.setKey("home");
+        menu.setKeyPath("home");
         menu.setSortOrder(1);
         menu.setPath("/home");
         menu.setComponent("Home");
@@ -124,6 +125,7 @@ public class DataInitializer implements ApplicationRunner {
         menu.setParentId(1L);
         menu.setName("数据看板");
         menu.setKey("dashboard");
+        menu.setKeyPath("home.dashboard");
         menu.setSortOrder(1);
         menu.setPath("/home/dashboard");
         menu.setComponent("Dashboard");
@@ -138,6 +140,7 @@ public class DataInitializer implements ApplicationRunner {
         menu.setParentId(1L);
         menu.setName("统计报表");
         menu.setKey("stats");
+        menu.setKeyPath("home.stats");
         menu.setSortOrder(2);
         menu.setPath("/home/stats");
         menu.setComponent("Stats");
@@ -152,6 +155,7 @@ public class DataInitializer implements ApplicationRunner {
         menu.setParentId(1L);
         menu.setName("概览信息");
         menu.setKey("overview");
+        menu.setKeyPath("home.overview");
         menu.setSortOrder(3);
         menu.setPath("/home/overview");
         menu.setComponent("Overview");
@@ -166,6 +170,7 @@ public class DataInitializer implements ApplicationRunner {
         menu.setParentId(0L);
         menu.setName("人员管理");
         menu.setKey("users");
+        menu.setKeyPath("users");
         menu.setSortOrder(2);
         menu.setPath("/users");
         menu.setComponent("Users");
@@ -180,6 +185,7 @@ public class DataInitializer implements ApplicationRunner {
         menu.setParentId(5L);
         menu.setName("用户列表");
         menu.setKey("users-list");
+        menu.setKeyPath("users.list");
         menu.setSortOrder(1);
         menu.setPath("/users/list");
         menu.setComponent("UsersList");
@@ -194,6 +200,7 @@ public class DataInitializer implements ApplicationRunner {
         menu.setParentId(5L);
         menu.setName("添加用户");
         menu.setKey("users-add");
+        menu.setKeyPath("users.add");
         menu.setSortOrder(2);
         menu.setPath("/users/add");
         menu.setComponent("UsersAdd");
@@ -208,6 +215,7 @@ public class DataInitializer implements ApplicationRunner {
         menu.setParentId(5L);
         menu.setName("导入用户");
         menu.setKey("users-import");
+        menu.setKeyPath("users.import");
         menu.setSortOrder(3);
         menu.setPath("/users/import");
         menu.setComponent("UsersImport");
@@ -222,6 +230,7 @@ public class DataInitializer implements ApplicationRunner {
         menu.setParentId(0L);
         menu.setName("角色管理");
         menu.setKey("roles");
+        menu.setKeyPath("roles");
         menu.setSortOrder(3);
         menu.setPath("/roles");
         menu.setComponent("Roles");
@@ -236,6 +245,7 @@ public class DataInitializer implements ApplicationRunner {
         menu.setParentId(9L);
         menu.setName("角色列表");
         menu.setKey("roles-list");
+        menu.setKeyPath("roles.list");
         menu.setSortOrder(1);
         menu.setPath("/roles/list");
         menu.setComponent("RolesList");
@@ -250,6 +260,7 @@ public class DataInitializer implements ApplicationRunner {
         menu.setParentId(9L);
         menu.setName("创建角色");
         menu.setKey("roles-add");
+        menu.setKeyPath("roles.add");
         menu.setSortOrder(2);
         menu.setPath("/roles/add");
         menu.setComponent("RolesAdd");
@@ -264,6 +275,7 @@ public class DataInitializer implements ApplicationRunner {
         menu.setParentId(9L);
         menu.setName("权限配置");
         menu.setKey("roles-permissions");
+        menu.setKeyPath("roles.permissions");
         menu.setSortOrder(3);
         menu.setPath("/roles/permissions");
         menu.setComponent("RolesPermissions");
@@ -274,12 +286,12 @@ public class DataInitializer implements ApplicationRunner {
     
     private Menu createNotesMenu() {
         Menu menu = new Menu();
-        menu.setId(26L);
+        menu.setId(13L);
         menu.setParentId(0L);
         menu.setName("笔记管理");
         menu.setKey("notes");
         menu.setKeyPath("notes");
-        menu.setSortOrder(6);
+        menu.setSortOrder(4);
         menu.setPath("/notes");
         menu.setComponent("Notes");
         menu.setIcon("EditOutlined");
@@ -289,11 +301,11 @@ public class DataInitializer implements ApplicationRunner {
     
     private Menu createNotesListMenu() {
         Menu menu = new Menu();
-        menu.setId(27L);
-        menu.setParentId(26L);
+        menu.setId(14L);
+        menu.setParentId(13L);
         menu.setName("笔记列表");
         menu.setKey("notes-list");
-        menu.setKeyPath("notes-list");
+        menu.setKeyPath("notes.list");
         menu.setSortOrder(1);
         menu.setPath("/notes/list");
         menu.setComponent("NotesList");
@@ -319,15 +331,12 @@ public class DataInitializer implements ApplicationRunner {
             }
             
             if (!hasData) {
-                // SYSTEM角色（ID为3，根据init_ddm.sql）拥有全部菜单权限（6-25的现有菜单 + 26-27的笔记菜单）
+                // SYSTEM角色（ID为3，根据init_ddm.sql）拥有全部菜单权限（1-14）
                 List<Long> allMenuIds = new ArrayList<>();
-                // 添加现有菜单ID（6-25）
-                for (long i = 6; i <= 25; i++) {
+                // 添加所有菜单ID（1-14）
+                for (long i = 1; i <= 14; i++) {
                     allMenuIds.add(i);
                 }
-                // 添加笔记菜单ID（26-27）
-                allMenuIds.add(26L);
-                allMenuIds.add(27L);
                 try {
                     roleMenuService.assignMenusToRole(3L, allMenuIds);
                     System.out.println("已为SYSTEM角色分配全部菜单权限");
@@ -337,9 +346,9 @@ public class DataInitializer implements ApplicationRunner {
                 
                 // USER角色（ID为1，根据init_ddm.sql）拥有用户列表和笔记列表菜单权限
                 List<Long> userMenuIds = new ArrayList<>();
-                userMenuIds.add(14L); // 用户列表菜单ID
-                userMenuIds.add(26L); // 笔记管理菜单ID
-                userMenuIds.add(27L); // 笔记列表菜单ID
+                userMenuIds.add(6L); // 用户列表菜单ID
+                userMenuIds.add(13L); // 笔记管理菜单ID
+                userMenuIds.add(14L); // 笔记列表菜单ID
                 try {
                     roleMenuService.assignMenusToRole(1L, userMenuIds);
                     System.out.println("已为USER角色分配用户列表和笔记列表菜单权限");

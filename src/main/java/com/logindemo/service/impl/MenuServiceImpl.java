@@ -35,12 +35,48 @@ public class MenuServiceImpl extends ServiceImpl<MenuMapper, Menu> implements Me
     
     @Override
     public Menu saveMenu(Menu menu) {
+        // 如果keyPath为空，自动生成
+        if (menu.getKeyPath() == null || menu.getKeyPath().isEmpty()) {
+            menu.setKeyPath(generateKeyPath(menu));
+        }
+        
         if (menu.getId() != null) {
             this.updateById(menu);
         } else {
             this.save(menu);
         }
         return menu;
+    }
+    
+    /**
+     * 自动生成keyPath
+     * 如果是顶级菜单，keyPath = key
+     * 如果有父菜单，keyPath = 父菜单的keyPath + "." + key
+     */
+    private String generateKeyPath(Menu menu) {
+        if (menu.getKey() == null || menu.getKey().isEmpty()) {
+            throw new IllegalArgumentException("菜单key不能为空");
+        }
+        
+        // 顶级菜单
+        if (menu.getParentId() == null || menu.getParentId() == 0) {
+            return menu.getKey();
+        }
+        
+        // 查询父菜单
+        Menu parentMenu = this.getById(menu.getParentId());
+        if (parentMenu == null) {
+            // 如果父菜单不存在，只返回当前key
+            return menu.getKey();
+        }
+        
+        // 父菜单的keyPath + "." + 当前key
+        String parentKeyPath = parentMenu.getKeyPath();
+        if (parentKeyPath == null || parentKeyPath.isEmpty()) {
+            // 如果父菜单也没有keyPath，递归生成
+            parentKeyPath = generateKeyPath(parentMenu);
+        }
+        return parentKeyPath + "." + menu.getKey();
     }
     
     @Override
