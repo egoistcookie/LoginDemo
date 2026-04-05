@@ -8,6 +8,7 @@
 4. [生产环境配置](#生产环境配置)
 5. [服务启动与管理](#服务启动与管理)
 6. [Nginx 反向代理配置](#nginx-反向代理配置可选)
+6.1 [前端（Web）构建与部署（Nginx）](#前端web构建与部署nginx)
 7. [监控与维护](#监控与维护)
 8. [常见问题排查](#常见问题排查)
 9. [Docker 部署方案](#docker-部署方案可选)
@@ -520,6 +521,90 @@ server {
     # ... 其他配置
 }
 ```
+
+---
+
+## 前端（Web）构建与部署（Nginx）
+
+本节说明如何将已修改的前端代码（含 `frontend/src/config.js`、CSS 等）通过构建产物部署到服务器，并使用 Nginx 提供静态托管与 `/api` 反向代理。
+
+### 1. 构建前检查
+
+- 确保 `frontend/src/config.js` 的 `API_BASE_URL` 指向服务器后端地址（示例：`http://your-server:8080/api` 或经由网关/反代的地址）。
+- 如需 HTTPS，请准备好证书（也可先用 HTTP 验证）。
+
+### 2. 本地构建
+
+```bash
+cd frontend
+npm ci
+npm run build
+```
+
+构建完成后会在 `frontend/build/` 生成静态资源。
+
+### 3. 上传构建产物到服务器
+
+将 `frontend/build/` 上传到服务器指定目录（示例：`/var/www/login-frontend`）。
+
+```bash
+# 从本地上传（示例）
+scp -r frontend/build/ user@your-server:/var/www/login-frontend
+```
+
+说明：`/var/www/login-frontend` 目录用于存放前端静态资源。你也可以按需更换路径，但需与下文 Nginx 配置保持一致。
+
+### 4. Nginx 配置（静态托管 + /api 反向代理）
+
+可参考仓库中的 `deploy/nginx.conf.example` 或 `frontend/nginx-frontend.conf`，典型 HTTP 配置如下：
+
+```nginx
+server {
+  listen 80;
+  server_name your-domain.com;
+
+  # 将 root 指向你上传的 build 目录
+  root /var/www/login-frontend;
+  index index.html;
+
+  # 前端静态资源与单页应用路由
+  location / {
+    try_files $uri $uri/ /index.html;
+  }
+
+  # 反向代理到后端（保持 /api 前缀与前端 config 一致）
+  location /api/ {
+    proxy_pass http://127.0.0.1:8080/api/;
+    proxy_http_version 1.1;
+    proxy_set_header Host $host;
+    proxy_set_header X-Real-IP $remote_addr;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header Upgrade $http_upgrade;
+    proxy_set_header Connection $connection_upgrade;
+  }
+}
+```
+
+> 提示：生产环境建议使用 HTTPS，可参考本文件“SSL 证书配置（HTTPS）”章节，将 `listen 80` 改为 `listen 443 ssl;` 并配置证书。
+
+应用配置并重载 Nginx：
+
+```bash
+sudo nginx -t
+sudo systemctl reload nginx
+```
+
+### 5. 验证
+
+- 访问 `http://your-domain.com` 检查页面是否正常。
+- 打开浏览器控制台 Network 面板，确认前端请求的接口地址正确且能返回数据。
+- 我们已在 `frontend/public/index.html` 增加备案号元素，并在 `frontend/src/index.css` 增加固定底部样式，生产访问即可看到备案号“湘ICP备2026001526号-2”。如需修改样式或位置，可在上述两个文件中调整。
+
+### 6. 常见问题
+
+- 构建后仍请求到错误的 API 地址：请重新检查并修改 `frontend/src/config.js`，然后重新 `npm run build` 与上传。
+- 静态资源 404：检查 Nginx `root` 路径是否指向构建目录；确保 `try_files $uri $uri/ /index.html;` 存在以支持单页应用路由。
+- 跨域问题：若未通过同域反代 `/api`，需在后端或网关配置 CORS，生产不建议使用 `*`。
 
 ---
 

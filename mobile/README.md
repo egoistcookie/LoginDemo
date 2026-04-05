@@ -2,6 +2,20 @@
 
 登录系统的React Native移动端应用
 
+## 前后端启动与配置总览
+
+- 前端（Web）：`frontend/`
+  - 启动：`npm install && npm start`
+  - 配置：`frontend/src/config.js`（API 基址等）
+- 后端（Java/Spring Boot）：项目根目录（`pom.xml` 所在处）
+  - 启动：`mvn spring-boot:run` 或 `java -jar target/*.jar`
+  - 配置：`src/main/resources/application.yml`（端口、数据库、JWT 等）
+- 移动端（React Native）：`mobile/`
+  - 启动：`npm start`（Metro）与 `npm run android`/`npm run ios`
+  - 配置：`mobile/src/config/api.js`（API 基址）
+
+默认 API 地址约定：`http://localhost:8080/api`（详见“API配置”一节）。Android 模拟器如需访问宿主机服务，请将 `localhost` 替换为宿主机 IP，或使用端口转发（见下文）。
+
 ## 技术栈
 
 ### 核心框架
@@ -72,6 +86,22 @@ npm install
 
 ## 运行
 
+### 启动后端（先启动）
+
+在项目根目录执行：
+
+```bash
+# 方式一：开发调试
+mvn spring-boot:run
+
+# 方式二：打包后运行
+mvn -DskipTests package
+java -jar target/*.jar
+```
+
+后端默认端口：`8080`，开放 API 前缀：`/api`。可在 `src/main/resources/application.yml` 调整。
+
+
 ### Android
 
 ```bash
@@ -102,11 +132,11 @@ npm start -- --reset-cache
 mobile/
 ├── src/
 │   ├── api/          # API服务层
-│   │   ├── index.js  # Axios配置和拦截器
+│   │   ├── index.js  # Axios配置和拦截器（读取 config/api.js 的基址）
 │   │   ├── auth.js   # 认证相关API
 │   │   └── user.js   # 用户相关API
 │   ├── config/       # 配置文件
-│   │   └── api.js    # API地址配置
+│   │   └── api.js    # API地址配置（移动端）
 │   ├── navigation/   # 导航配置
 │   │   └── AppNavigator.js
 │   ├── screens/      # 页面组件
@@ -137,7 +167,14 @@ mobile/
 
 默认API地址：`http://localhost:8080/api`
 
-开发环境需要配置Android模拟器的网络代理或使用电脑IP地址。
+开发环境在 Android 模拟器上访问宿主机时，请注意：
+- 推荐将 `mobile/src/config/api.js` 的基址改为宿主机 IP，例如 `http://192.168.x.x:8080/api`
+- 或在设备上执行端口转发（需已连接设备/模拟器）：
+  ```bash
+  adb reverse tcp:8080 tcp:8080
+  ```
+
+Web 前端默认 API 地址在 `frontend/src/config.js`，与移动端保持一致即可（建议统一指向后端网关地址）。
 
 详细配置说明请参考 [API_CONFIG_GUIDE.md](./API_CONFIG_GUIDE.md)
 
@@ -187,3 +224,42 @@ mobile/
 3. **模拟器要求**: 推荐使用 Pixel 6 API 34 模拟器，架构为 arm64-v8a。
 
 4. **依赖更新**: 更新依赖后，如果补丁失效，需要重新生成补丁文件。
+
+## 前端（Web）启动指南
+
+位置：`frontend/`
+
+```bash
+cd frontend
+npm install
+npm start
+```
+
+- 默认开发端口：`3000`（可通过 `.env` 或启动参数调整）
+- API 配置文件：`frontend/src/config.js`（`API_BASE_URL`）
+- 生产部署可参考：`frontend/DEPLOYMENT.md` 与根目录 `DEPLOYMENT.md`、`deploy/` 下示例
+
+## 后端（Java / Spring Boot）启动指南
+
+位置：项目根目录（含 `pom.xml`）
+
+```bash
+# 直接运行
+mvn spring-boot:run
+
+# 或打包再运行
+mvn -DskipTests package
+java -jar target/*.jar
+```
+
+- 配置文件：`src/main/resources/application.yml`
+  - 典型配置项：`server.port`、`spring.datasource.*`、`jwt.*` 等
+- 初始化脚本：`init_ddl.sql`、`init_ddm.sql`（如需）
+- 日志：`logs/application.log`
+
+## 备案号（网站底部）
+
+网站前端已在全站底部增加备案号显示：`湘ICP备2026001526号-2`。如需调整样式或位置，可在：
+- `frontend/public/index.html`（元素插入处）
+- `frontend/src/index.css`（`.icp-footer` 样式）
+中进行修改。

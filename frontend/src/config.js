@@ -7,7 +7,7 @@ const config = {
   API_BASE_URL: process.env.REACT_APP_API_BASE_URL || (
     process.env.NODE_ENV === 'production' 
       ? '/api'  // 生产环境：使用相对路径，通过Nginx代理
-      : 'http://127.0.0.1:8080/api'  // 开发环境：使用本地后端
+      : 'http://egoistcookie.top:8080/api'  // 开发环境：使用本地后端
   ),
 
   // 其他配置可以在这里添加
